@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  aml-system:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aml_agentic_system
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - SANCTIONS_API_KEY=${SANCTIONS_API_KEY:-demo}
+      - PEP_API_KEY=${PEP_API_KEY:-demo}
+      - RANDOM_SEED=42
+      - LOG_LEVEL=INFO
+      - ENABLE_PRIVACY_GUARD=true
+      - ENABLE_JUDGE_AGENT=true
+      - MAX_SAR_PER_ENTITY=10
+    volumes:
+      - ./results:/app/results
+      - ./figures:/app/figures
+      - ./logs:/app/logs
+      - ./data:/app/data
+    ports:
+      - "5000:5000"
+    networks:
+      - aml-network
+    command: ["python", "-m", "code.ui.web_app"]
+
+  redis:
+    image: redis:7-alpine
+    container_name: aml_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - aml-network
+    volumes:
+      - redis-data:/data
+
+networks:
+  aml-network:
+    driver: bridge
+
+volumes:
+  redis-data:
