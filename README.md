@@ -85,8 +85,6 @@ aml_agentic_system/
 ├── run_quick.sh                       # 30-min quick experiment
 ├── run_full.sh                        # Full experimental suite
 ├── reproducibility-checklist.md       # Detailed reproducibility guide
-├── manifest.txt                       # File-to-artifact mapping
-├── TODO_USER_ITEMS.md                 # Required external resources
 │
 ├── code/                              # Main implementation
 │   ├── agents/                        # Agent modules
@@ -331,47 +329,3 @@ Orchestrator
 4. **Adversarial Robustness**: Not tested against adaptive adversaries
 5. **Scalability**: Current implementation is single-node; distributed version needed for production scale
 
-## 🔮 Future Work
-
-- [ ] Distributed architecture for multi-million transaction/day throughput
-- [ ] Federated learning for cross-institution model training
-- [ ] Active learning for investigator feedback incorporation
-- [ ] Adversarial training against evasion attacks
-- [ ] Integration with real-world compliance management systems
-
-## 📚 Citations
-
-If you use this work, please cite:
-
-```bibtex
-@article{aml_agentic_2024,
-  title={Agentic AI for Anti-Money Laundering and Regulatory Compliance},
-  author={[Authors]},
-  journal={arXiv preprint arXiv:XXXX.XXXXX},
-  year={2024}
-}
-```
-
-## 📄 License
-
-MIT License - See [LICENSE](LICENSE) for details.
-
-**Research Use Only**: This system is for research and demonstration purposes. Production deployment requires:
-- Validation with real AML data
-- Regulatory approval
-- Security audit
-- Compliance officer training
-
-## 🤝 Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-## 📞 Contact
-
-- Issues: GitHub Issues
-- Email: [contact email]
-- Paper: [arXiv link when published]
-
----
-
-**Acknowledgments**: This research implementation uses deterministic synthetic data for reproducibility. Real-world AML systems require validated proprietary data sources and regulatory oversight.
