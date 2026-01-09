@@ -84,7 +84,6 @@ aml_agentic_system/
 ├── requirements.txt                   # Python dependencies (pinned versions)
 ├── run_quick.sh                       # 30-min quick experiment
 ├── run_full.sh                        # Full experimental suite
-├── reproducibility-checklist.md       # Detailed reproducibility guide
 │
 ├── code/                              # Main implementation
 │   ├── agents/                        # Agent modules
@@ -161,32 +160,7 @@ aml_agentic_system/
 │   ├── statistical_tests/            # Significance tests
 │   └── logs/                         # Audit trail JSONL logs
 │
-├── paper_ml/                          # ML conference paper
-│   ├── main.tex                      # Main LaTeX document
-│   ├── sections/                     # Paper sections
-│   ├── bibliography.bib              # References
-│   ├── neurips_2024.sty             # NeurIPS style
-│   └── main.pdf                      # Compiled PDF
-│
-├── paper_compliance/                  # Industry/regulatory paper
-│   ├── main.tex                      # Main LaTeX document
-│   ├── sections/                     # Paper sections
-│   ├── ieee_compliance.cls           # IEEE compliance style
-│   └── main.pdf                      # Compiled PDF
-│
-├── ethics/                            # Ethics & compliance
-│   ├── irb_notes.md                  # IRB considerations
-│   ├── consent_template.md           # Human evaluation consent
-│   ├── compliance_checklist.md       # Regulatory compliance
-│   ├── pii_redaction_spec.md         # Privacy specification
-│   └── regulatory_analysis.md        # FATF, GDPR, PCI DSS notes
-│
-└── CI/                                # Continuous integration
-    ├── .github/
-    │   └── workflows/
-    │       ├── tests.yml             # Unit & integration tests
-    │       └── quick_experiment.yml   # Smoke test on PR
-    └── ci_logs/                      # CI execution logs
+
 ```
 
 ## 🔬 Reproducibility
