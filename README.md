@@ -2,7 +2,6 @@
 
 **Complete Research Implementation with Deterministic Synthetic Results**
 
-[![Docker](https://img.shields.io/badge/docker-ready-blue)](Dockerfile)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue)](requirements.txt)
 
 ## 🎯 Project Overview
