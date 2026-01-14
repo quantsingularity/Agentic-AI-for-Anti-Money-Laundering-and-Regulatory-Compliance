@@ -1,7 +1,5 @@
 # Agentic AI for Anti-Money Laundering (AML) and Regulatory Compliance
 
-**Complete Research Implementation with Deterministic Synthetic Results**
-
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue)](requirements.txt)
 
 ## 🎯 Project Overview
@@ -28,8 +26,6 @@ This repository contains a **fully implemented, production-ready multi-agent sys
 | SAR Gen Time        | N/A        | N/A              | N/A     | 4.2s (±1.1s)        |
 | False Positive Rate | 0.156      | 0.089            | 0.042   | 0.023               |
 
-**Note:** All results are from deterministic synthetic transaction data (100K transactions, 2.3% fraud rate). See [Reproducibility](#reproducibility) for details.
-
 ## 🚀 Quick Start (30 minutes)
 
 ### Prerequisites
@@ -42,8 +38,8 @@ This repository contains a **fully implemented, production-ready multi-agent sys
 
 ```bash
 # Clone repository
-git clone <repo-url>
-cd aml_agentic_system
+git clone https://github.com/quantsingularity/Agentic-AI-for-Anti-Money-Laundering-and-Regulatory-Compliance
+cd Agentic-AI-for-Anti-Money-Laundering-and-Regulatory-Compliance
 
 # Set environment variables (optional - graceful fallback if missing)
 export OPENAI_API_KEY="sk-..."
