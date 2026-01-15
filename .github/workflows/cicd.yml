@@ -90,9 +90,12 @@ jobs:
           cache: "npm"
 
       - name: Install Node dependencies (root)
-        working-directory: .
         run: |
-          npm ci
+          if [ -f package.json ]; then
+            npm ci
+          else
+            echo "No package.json found, skipping npm ci."
+          fi
 
       # -------------------------------
       # Prettier checks (Markdown & YAML)
