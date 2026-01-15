@@ -11,11 +11,17 @@ jobs:
   formatting_check:
     runs-on: ubuntu-latest
     steps:
+      # -------------------------------
+      # Checkout repository
+      # -------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # -------------------------------
+      # Python Setup + Caching
+      # -------------------------------
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -34,16 +40,21 @@ jobs:
           python -m pip install --upgrade pip
           pip install autoflake black
 
-      - name: Run autoflake (dry-check + list affected files)
+      # -------------------------------
+      # Run Python formatting checks (repo-wide .py files)
+      # -------------------------------
+      - name: Run autoflake across repo (check only)
         shell: bash
         run: |
           set -euo pipefail
 
           echo "=== Preparing temporary copy of repository for autoflake ==="
           TMP_COPY="$(mktemp -d)"
+          # copy repo excluding .git and node_modules to avoid noise
           rsync -a --exclude='.git' --exclude='node_modules' --exclude='.venv' ./ "$TMP_COPY/"
 
           echo "=== Running autoflake (will modify temp copy) on all .py files ==="
+          # Use find to target only .py files
           find "$TMP_COPY" -type f -name "*.py" -print0 | xargs -0 --no-run-if-empty autoflake \
             --remove-all-unused-imports \
             --remove-unused-variables \
@@ -51,15 +62,10 @@ jobs:
             --ignore-init-module-imports \
             --in-place
 
-          echo "=== Showing which files would change (if any) ==="
-          # -q only prints names of differing files
-          if diff -rq . "$TMP_COPY" > /dev/null; then
-            echo "autoflake check: no changes detected."
-          else
-            echo "autoflake would change the following files:"
-            diff -rq . "$TMP_COPY" | sed -n 's/^Files //; s/ and .*//p' || true
-            echo
-            echo "To fix locally: autoflake --remove-all-unused-imports --remove-unused-variables --recursive --ignore-init-module-imports --in-place <path>"
+          echo "=== Comparing repo with autoflake-modified copy ==="
+          if ! diff -r . "$TMP_COPY" > /dev/null; then
+            echo "autoflake detected unused imports / formatting changes in .py files."
+            echo "Run locally: autoflake --remove-all-unused-imports --remove-unused-variables --recursive --ignore-init-module-imports --in-place <path>"
             rm -rf "$TMP_COPY"
             exit 1
           fi
@@ -69,9 +75,13 @@ jobs:
 
       - name: Run black check (repo-wide)
         run: |
+          # Black will check all python files in the repo
           black . --check
 
-      - name: Set up Node.js (for Prettier checks)
+      # -------------------------------
+      # Node + npm caching (for Prettier)
+      # -------------------------------
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "18"
@@ -82,10 +92,14 @@ jobs:
         run: |
           npm ci
 
+      # -------------------------------
+      # Prettier checks
+      # -------------------------------
       - name: Run Prettier Checks (all .md files in repo)
         working-directory: .
         run: |
           echo "=== Running Prettier (all .md files) ==="
+          # Check all markdown files in repo, honoring .prettierignore if present
           npx --no-install prettier --check "**/*.md" --ignore-path .prettierignore || {
             echo "Prettier formatting issues detected in markdown files across the repo."
             exit 1
@@ -96,68 +110,12 @@ jobs:
         run: |
           echo "=== Running Prettier (all .yml/.yaml files) ==="
           npx --no-install prettier --check "**/*.{yml,yaml}" --ignore-path .prettierignore || {
-            echo "Prettier formatting issues detected in YAML/YML files."
+            echo "Prettier formatting issues detected in YAML/YML files across the repo."
             exit 1
           }
 
+      # -------------------------------
+      # Finalize
+      # -------------------------------
       - name: Finalize Check
         run: echo "All formatting checks for .py, .md and .yml/.yaml files completed successfully."
-
-  # Optional autofix job — run manually from Actions UI (workflow_dispatch)
-  autofix:
-    needs: []
-    if: github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-
-      - name: Install formatters
-        run: |
-          python -m pip install --upgrade pip
-          pip install autoflake black
-
-      - name: Run autoflake + black (apply fixes)
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          # apply autoflake to repo in-place (target only .py files)
-          find . -type f -name "*.py" -print0 | xargs -0 --no-run-if-empty autoflake \
-            --remove-all-unused-imports \
-            --remove-unused-variables \
-            --recursive \
-            --ignore-init-module-imports \
-            --in-place
-
-          # run black to format python code
-          black .
-
-          # prepare commit if anything changed
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No formatting changes to commit."
-            exit 0
-          fi
-
-          git commit -m "chore: apply autoflake + black formatting"
-
-      - name: Create Pull Request with formatting fixes
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "chore: apply autoflake + black formatting"
-          branch: "format/autofix-${{ github.run_id }}"
-          title: "Auto-format: apply autoflake + black"
-          body: |
-            This pull request applies autoflake and black formatting to Python files.
-            If this change looks good, please merge it into your target branch.
