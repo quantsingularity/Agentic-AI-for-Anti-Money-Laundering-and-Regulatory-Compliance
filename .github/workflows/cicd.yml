@@ -40,16 +40,17 @@ jobs:
         run: pip install --upgrade pip && pip install autoflake black
 
       # -------------------------------
-      # Run Python formatting checks (backend only)
+      # Run Python formatting checks (Repository-wide)
       # -------------------------------
-      - name: Run Python formatting checks (backend)
+      - name: Run Python formatting checks (Repository-wide)
         shell: bash
         run: |
           set -euo pipefail
 
           echo "=== Preparing temporary copy of repository for autoflake ==="
           TMP_COPY="$(mktemp -d)"
-          cp -a . "$TMP_COPY/"
+          # Copy only .py files to temp for comparison to avoid massive IO
+          rsync -am --include='*.py' --include='*/' --exclude='*' . "$TMP_COPY/"
 
           echo "=== Running autoflake (will modify temp copy) ==="
           autoflake \
@@ -60,8 +61,9 @@ jobs:
             --in-place \
             "$TMP_COPY"
 
-          echo "=== Comparing repository with autoflake-modified copy ==="
-          if ! diff -r . "$TMP_COPY" > /dev/null; then
+          echo "=== Comparing repository .py files with autoflake-modified copy ==="
+          # Compare only .py files
+          if ! diff -qr . "$TMP_COPY" --include="*.py" > /dev/null; then
             echo "autoflake found formatting/unused-imports issues in Python files."
             echo "Run: autoflake --remove-all-unused-imports --remove-unused-variables --recursive --ignore-init-module-imports --in-place ."
             rm -rf "$TMP_COPY"
@@ -70,8 +72,8 @@ jobs:
 
           rm -rf "$TMP_COPY"
 
-          echo "=== Running black (check mode) ==="
-          black --check .
+          echo "=== Running black (check mode on all .py files) ==="
+          black . --check
 
       # -------------------------------
       # Node + npm caching
@@ -83,29 +85,28 @@ jobs:
           cache: "npm"
 
       - name: Install Node dependencies (root)
-        working-directory: .
         run: |
-          npm ci
+          if [ -f package.json ]; then
+            npm ci
+          else
+            echo "No package.json found, skipping npm ci."
+          fi
 
       # -------------------------------
-      # Prettier checks
+      # Prettier checks (Markdown & YAML)
       # -------------------------------
 
-      # 2) Repository-wide Markdown check (ALL .md files)
       - name: Run Prettier Checks (all .md files in repo)
-        working-directory: .
         run: |
           echo "=== Running Prettier (all .md files) ==="
           npx --no-install prettier --check "**/*.md" --ignore-path .prettierignore || {
-            echo "Prettier formatting issues detected in markdown files across the repo."
+            echo "Prettier formatting issues detected in markdown files."
             exit 1
           }
 
-      # 3) Repository-wide YAML/YML check (ALL yaml/yml files)
       - name: Run Prettier Checks (all YAML/YML files in repo)
-        working-directory: .
         run: |
-          echo "=== Running Prettier (YAML/YML files) ==="
+          echo "=== Running Prettier (all .yml and .yaml files) ==="
           npx --no-install prettier --check "**/*.{yml,yaml}" --ignore-path .prettierignore || {
             echo "Prettier formatting issues detected in YAML/YML files."
             exit 1
@@ -115,4 +116,4 @@ jobs:
       # Finalize
       # -------------------------------
       - name: Finalize Check
-        run: echo "All formatting checks completed successfully."
+        run: echo "All repository-wide formatting checks completed successfully."
