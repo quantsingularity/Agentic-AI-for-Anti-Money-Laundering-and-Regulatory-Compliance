@@ -204,10 +204,10 @@ class ExperimentRunner:
         """Isolation Forest detector."""
         from sklearn.ensemble import IsolationForest
 
-        # Engineer features
+        # fit=False on test data to prevent data leakage.
         classifier = XGBoostClassifier(seed=self.seed, **self.model_params)
-        train_features = classifier.engineer_features(train_df)
-        test_features = classifier.engineer_features(test_df)
+        train_features = classifier.engineer_features(train_df, fit=True)
+        test_features = classifier.engineer_features(test_df, fit=False)
 
         X_train, _ = classifier.prepare_data(train_features)
         X_test, y_test = classifier.prepare_data(test_features)
@@ -236,9 +236,8 @@ class ExperimentRunner:
             task="binary", seed=self.seed, **self.model_params
         )
 
-        # Engineer features
-        train_features = classifier.engineer_features(train_df)
-        test_features = classifier.engineer_features(test_df)
+        train_features = classifier.engineer_features(train_df, fit=True)
+        test_features = classifier.engineer_features(test_df, fit=False)
 
         X_train, y_train = classifier.prepare_data(train_features)
         X_test, y_test = classifier.prepare_data(test_features)
@@ -264,13 +263,11 @@ class ExperimentRunner:
             task="binary", seed=self.seed, **self.model_params
         )
 
-        # Train
-        train_features = classifier.engineer_features(train_df)
+        train_features = classifier.engineer_features(train_df, fit=True)
         X_train, y_train = classifier.prepare_data(train_features)
         classifier.train(X_train, y_train)
 
-        # Test with agents
-        test_features = classifier.engineer_features(test_df)
+        test_features = classifier.engineer_features(test_df, fit=False)
         X_test, y_test = classifier.prepare_data(test_features)
 
         # Privacy Guard
@@ -290,7 +287,7 @@ class ExperimentRunner:
             txn_data = test_df.iloc[idx].to_dict()
 
             start = time.time()
-            narrative_result = narrative_agent.process(
+            narrative_agent.process(
                 {
                     "subject_id": txn_data["sender_id"],
                     "transactions": [txn_data],
@@ -304,8 +301,12 @@ class ExperimentRunner:
         metrics = self._compute_metrics(y_test, predictions, proba)
 
         # Add SAR-specific metrics
-        metrics["sar_generation_time_mean"] = np.mean(sar_generation_times)
-        metrics["sar_generation_time_std"] = np.std(sar_generation_times)
+        metrics["sar_generation_time_mean"] = (
+            np.mean(sar_generation_times) if sar_generation_times else 0.0
+        )
+        metrics["sar_generation_time_std"] = (
+            np.std(sar_generation_times) if sar_generation_times else 0.0
+        )
         metrics["sars_generated"] = len(suspicious_indices)
 
         return metrics
@@ -335,10 +336,7 @@ class ExperimentRunner:
 
         # Compute improvement
         improvement = agentic_f1 - baseline_f1
-        improvement_pct = (improvement / baseline_f1) * 100
-
-        # Simple significance test (would need predictions for proper bootstrap)
-        # For deterministic results, we provide pre-computed values
+        improvement_pct = (improvement / baseline_f1) * 100 if baseline_f1 > 0 else 0.0
 
         tests["f1_improvement"] = {
             "baseline_f1": baseline_f1,
@@ -368,16 +366,16 @@ class ExperimentRunner:
         tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
 
         metrics = {
-            "precision": float(precision_score(y_true, y_pred)),
-            "recall": float(recall_score(y_true, y_pred)),
-            "f1": float(f1_score(y_true, y_pred)),
+            "precision": float(precision_score(y_true, y_pred, zero_division=0)),
+            "recall": float(recall_score(y_true, y_pred, zero_division=0)),
+            "f1": float(f1_score(y_true, y_pred, zero_division=0)),
             "roc_auc": float(roc_auc_score(y_true, y_proba)),
             "true_positives": int(tp),
             "true_negatives": int(tn),
             "false_positives": int(fp),
             "false_negatives": int(fn),
-            "false_positive_rate": float(fp / (fp + tn)),
-            "false_negative_rate": float(fn / (fn + tp)),
+            "false_positive_rate": float(fp / (fp + tn)) if (fp + tn) > 0 else 0.0,
+            "false_negative_rate": float(fn / (fn + tp)) if (fn + tp) > 0 else 0.0,
         }
 
         # PR-AUC
@@ -391,19 +389,34 @@ class ExperimentRunner:
         baseline = results["baseline_results"]["xgboost"]
         agentic = results["agentic_results"]
 
+        f1_improvement = agentic["f1"] - baseline["f1"]
+
+        rel_improvement_pct = (
+            (f1_improvement / baseline["f1"]) * 100 if baseline["f1"] > 0 else 0.0
+        )
+
+        baseline_fpr = baseline["false_positive_rate"]
+        agentic_fpr = agentic["false_positive_rate"]
+        fpr_reduction_pct = (
+            ((baseline_fpr - agentic_fpr) / baseline_fpr) * 100
+            if baseline_fpr > 0
+            else 0.0
+        )
+
+        mean_sar_time = agentic.get("sar_generation_time_mean", 0)
+
         summary = {
             "best_baseline": "xgboost",
             "best_baseline_f1": baseline["f1"],
             "agentic_f1": agentic["f1"],
-            "f1_improvement": agentic["f1"] - baseline["f1"],
-            "fpr_reduction": baseline["false_positive_rate"]
-            - agentic["false_positive_rate"],
-            "mean_sar_generation_time": agentic.get("sar_generation_time_mean", 0),
+            "f1_improvement": f1_improvement,
+            "fpr_reduction": baseline_fpr - agentic_fpr,
+            "mean_sar_generation_time": mean_sar_time,
             "key_findings": [
                 f"Agentic system achieves {agentic['f1']:.3f} F1 score",
-                f"13.6% improvement over XGBoost baseline ({baseline['f1']:.3f})",
-                f"77% reduction in false positive rate",
-                f"Mean SAR generation time: {agentic.get('sar_generation_time_mean', 0):.2f}s",
+                f"{rel_improvement_pct:.1f}% improvement over XGBoost baseline ({baseline['f1']:.3f})",
+                f"{fpr_reduction_pct:.1f}% reduction in false positive rate",
+                f"Mean SAR generation time: {mean_sar_time:.2f}s",
             ],
         }
 

@@ -17,18 +17,21 @@ class AdversarialTester:
     Simulates sophisticated money laundering typologies.
     """
 
-    def __init__(self, config: Optional[Dict] = None):
+    def __init__(self, config: Optional[Dict] = None, seed: int = 42):
         """
         Initialize adversarial testing framework.
 
-        Args:
-            config: Configuration parameters
         """
         self.config = config or {}
+        self.seed = seed
+
+        np.random.seed(seed)
+        random.seed(seed)
+
         self.evasion_techniques = self._load_evasion_techniques()
         self.test_results = []
 
-        logger.info("Initialized Adversarial Testing Framework")
+        logger.info(f"Initialized Adversarial Testing Framework with seed={seed}")
 
     def _load_evasion_techniques(self) -> Dict:
         """Define sophisticated evasion techniques."""
@@ -169,8 +172,8 @@ class AdversarialTester:
             "detected": detected,
             "missed": missed,
             "detection_rate": detected / max(1, num_attacks),
-            "avg_risk_score": np.mean(attack_scores) if attack_scores else 0.0,
-            "max_risk_score": np.max(attack_scores) if attack_scores else 0.0,
+            "avg_risk_score": float(np.mean(attack_scores)) if attack_scores else 0.0,
+            "max_risk_score": float(np.max(attack_scores)) if attack_scores else 0.0,
         }
 
     def _is_detected(self, predictions: Dict, threshold: float = 0.5) -> bool:
@@ -187,7 +190,6 @@ class AdversarialTester:
         Generate structuring attack (smurfing).
         Split large transaction into multiple below threshold.
         """
-        # Take a clean transaction and split it
         sample = baseline_data.sample(n=1).iloc[0].to_dict()
 
         large_amount = np.random.uniform(15000, 50000)
@@ -467,6 +469,10 @@ class AdversarialTester:
             logger.info(f"  Max Risk Score: {tech_results['max_risk_score']:.3f}")
 
         logger.info("\n" + "=" * 80)
+
+
+# Missing import for List (used in type hint of _split_amount_randomly)
+from typing import List  # noqa: E402  (placed after class body intentionally)
 
 
 class AdaptiveLearner:

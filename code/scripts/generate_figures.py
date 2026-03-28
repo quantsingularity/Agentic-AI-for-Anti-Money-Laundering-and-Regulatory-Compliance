@@ -75,7 +75,6 @@ def generate_roc_pr_curves(results_dir: Path, output_dir: Path):
     # Plot ROC curves (synthetic interpolation using AUC)
     for (name, metrics), color in zip(models.items(), colors):
         roc_auc = float(metrics.get("roc_auc", 0.0))
-        pr_auc = float(metrics.get("pr_auc", 0.0))
 
         fpr = np.linspace(0, 1, 200)
         # avoid division by zero
@@ -129,19 +128,15 @@ def generate_sar_latency_throughput(results_dir: Path, output_dir: Path):
 
     agentic = results.get("agentic_results", {})
 
-    # Create figure with 2 subplots
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
 
-    # Simulate SAR generation times (from results)
     mean_time = float(agentic.get("sar_generation_time_mean", 4.2))
     std_time = float(agentic.get("sar_generation_time_std", 1.1))
 
-    # Generate synthetic distribution
     rng = np.random.default_rng(42)
     sar_times = rng.normal(mean_time, std_time, 1000)
-    sar_times = np.clip(sar_times, 0.5, 10)  # Clip to reasonable range
+    sar_times = np.clip(sar_times, 0.5, 10)
 
-    # Plot 1: Latency distribution
     ax1.hist(sar_times, bins=50, color="steelblue", alpha=0.7, edgecolor="black")
     ax1.axvline(
         mean_time,
@@ -156,9 +151,7 @@ def generate_sar_latency_throughput(results_dir: Path, output_dir: Path):
     ax1.legend()
     ax1.grid(alpha=0.3)
 
-    # Plot 2: Throughput comparison (approximate)
     models = ["Rule-Based", "Isolation\nForest", "XGBoost", "Agentic\nSystem"]
-    # Estimate throughput: Agentic system throughput derived from mean_time
     throughput = [0, 0, 0, max(1.0, 3600 / max(mean_time, 1e-6))]
     colors_bar = ["#ff7f0e", "#2ca02c", "#1f77b4", "#d62728"]
 
@@ -167,7 +160,6 @@ def generate_sar_latency_throughput(results_dir: Path, output_dir: Path):
     ax2.set_title("System Throughput Comparison")
     ax2.grid(axis="y", alpha=0.3)
 
-    # Add value labels on bars
     for bar in bars:
         height = bar.get_height()
         if height > 0:
@@ -192,7 +184,6 @@ def generate_metrics_comparison(results_dir: Path, output_dir: Path):
     results_path = results_dir / "full_experiments.json"
     results = _load_results(results_path)
 
-    # Extract metrics
     models = ["Rule-Based", "Isolation\nForest", "XGBoost", "Agentic\nSystem"]
 
     precision = [
@@ -216,7 +207,6 @@ def generate_metrics_comparison(results_dir: Path, output_dir: Path):
         results.get("agentic_results", {}).get("f1", 0.0),
     ]
 
-    # Create grouped bar chart
     x = np.arange(len(models))
     width = 0.25
 
@@ -237,7 +227,6 @@ def generate_metrics_comparison(results_dir: Path, output_dir: Path):
     ax.grid(axis="y", alpha=0.3)
     ax.set_ylim(0, 1.0)
 
-    # Add value labels
     for bars in [bars1, bars2, bars3]:
         for bar in bars:
             height = bar.get_height()
@@ -267,7 +256,6 @@ def generate_architecture_diagram(output_dir: Path):
         dot.attr(rankdir="TB", size="10,12")
         dot.attr("node", shape="box", style="rounded,filled", fillcolor="lightblue")
 
-        # Define nodes
         dot.node("orchestrator", "Orchestrator", fillcolor="lightcoral")
         dot.node("ingest", "Ingest Agent")
         dot.node("feature", "Feature Engineer")
@@ -279,7 +267,6 @@ def generate_architecture_diagram(output_dir: Path):
         dot.node("judge", "Agent-as-Judge", fillcolor="lightgreen")
         dot.node("ui", "Investigator UI")
 
-        # Define edges
         dot.edge("orchestrator", "ingest")
         dot.edge("ingest", "feature")
         dot.edge("feature", "privacy")
@@ -307,7 +294,6 @@ def generate_explainability_annotation(output_dir: Path):
     fig, ax = plt.subplots(figsize=(12, 8))
     ax.axis("off")
 
-    # SAR narrative text
     sar_text = """
 SUSPICIOUS ACTIVITY REPORT - ANNOTATED EXAMPLE
 
@@ -346,7 +332,6 @@ VALIDATION:
         bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
     )
 
-    # Add annotations
     ax.annotate(
         "Every claim cites\nsource transaction",
         xy=(0.65, 0.6),
@@ -380,7 +365,8 @@ VALIDATION:
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--results-dir", type=str, default="results/full_experiments")
+
+    parser.add_argument("--results-dir", type=str, default="results")
     parser.add_argument("--output-dir", type=str, default="figures")
     parser.add_argument("--high-dpi", action="store_true", help="Use high DPI (300)")
     parser.add_argument(

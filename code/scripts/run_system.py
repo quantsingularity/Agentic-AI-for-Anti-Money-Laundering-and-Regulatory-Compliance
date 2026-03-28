@@ -4,8 +4,9 @@ Demonstrates all enhanced capabilities in production workflow
 """
 
 import sys
+from pathlib import Path
 
-sys.path.insert(0, "/home/user/Agentic-AI-Enhanced")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from loguru import logger
 import numpy as np
@@ -25,8 +26,7 @@ from code.validation.data_validator import DataValidator
 from code.analysis.cost_benefit import CostBenefitAnalyzer
 from code.dashboard.explainability_dashboard import ExplainabilityDashboard
 
-# Import existing components
-from code.data.synthetic_generator import SyntheticDataGenerator
+from code.data.synthetic_generator import SyntheticTransactionGenerator
 
 
 class EnhancedAMLSystem:
@@ -42,6 +42,11 @@ class EnhancedAMLSystem:
             config: Configuration dictionary
         """
         self.config = config
+
+        # Resolve a base output directory relative to this file so nothing is
+        # ever written to a hardcoded absolute path.
+        self._results_dir = Path(config.get("results_dir", "results")).resolve()
+        self._results_dir.mkdir(parents=True, exist_ok=True)
 
         # Initialize components
         logger.info("Initializing Enhanced AML System...")
@@ -128,9 +133,11 @@ class EnhancedAMLSystem:
 
     def _generate_synthetic_data(self):
         """Generate synthetic transaction data."""
-        generator = SyntheticDataGenerator(seed=42)
 
-        data = generator.generate(num_transactions=10000, fraud_rate=0.023)
+        generator = SyntheticTransactionGenerator(
+            n_transactions=10000, fraud_rate=0.023, seed=42
+        )
+        data = generator.generate()
 
         logger.info(f"Generated {len(data)} synthetic transactions")
         return data
@@ -258,9 +265,8 @@ class EnhancedAMLSystem:
         logger.info(f"Optimal threshold: {threshold_opt['optimal_threshold']:.3f}")
         logger.info(f"Net benefit: ${cost_analysis['summary']['net_benefit']:,.2f}")
 
-        # Export analysis
         self.cost_analyzer.export_analysis(
-            cost_analysis, "/home/user/Agentic-AI-Enhanced/results/cost_analysis.json"
+            cost_analysis, str(self._results_dir / "cost_analysis.json")
         )
 
         return cost_analysis
@@ -325,8 +331,8 @@ class EnhancedAMLSystem:
 
             sample_sars.append(sar)
 
-        # Save to file
-        with open("/home/user/Agentic-AI-Enhanced/results/sample_sars.json", "w") as f:
+        sars_path = self._results_dir / "sample_sars.json"
+        with open(sars_path, "w") as f:
             json.dump(sample_sars, f, indent=2)
 
         logger.info(f"Generated {len(sample_sars)} sample SARs for dashboard")
@@ -368,6 +374,7 @@ def main():
         "enable_streaming": False,  # Set to True if Kafka is running
         "enable_prometheus": False,  # Set to True if Prometheus is running
         "enable_dashboard": False,  # Set to True to launch dashboard
+        "results_dir": str(Path(__file__).resolve().parent.parent / "results"),
     }
 
     # Initialize and run
@@ -375,7 +382,7 @@ def main():
     system.run_full_workflow()
 
     logger.info("\n✓ Enhanced AML System demonstration complete!")
-    logger.info("Results saved to: /home/user/Agentic-AI-Enhanced/results/")
+    logger.info(f"Results saved to: {config['results_dir']}")
 
 
 if __name__ == "__main__":

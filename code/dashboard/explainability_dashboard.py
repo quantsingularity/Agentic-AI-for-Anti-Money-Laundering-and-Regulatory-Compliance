@@ -50,9 +50,9 @@ class ExplainabilityDashboard:
             sars = [
                 {
                     "sar_id": sar_id,
-                    "entity_id": sar_data["entity_id"],
-                    "risk_score": sar_data["risk_score"],
-                    "timestamp": sar_data["timestamp"],
+                    "entity_id": sar_data.get("entity_id"),
+                    "risk_score": sar_data.get("risk_score", 0.0),
+                    "timestamp": sar_data.get("timestamp"),
                     "status": sar_data.get("status", "pending"),
                 }
                 for sar_id, sar_data in self.sar_database.items()
@@ -122,7 +122,7 @@ class ExplainabilityDashboard:
             if sar_id not in self.sar_database:
                 return jsonify({"error": "SAR not found"}), 404
 
-            data = request.get_json()
+            data = request.get_json() or {}
             investigator = data.get("investigator", "Unknown")
             notes = data.get("notes", "")
 
@@ -143,7 +143,7 @@ class ExplainabilityDashboard:
             if sar_id not in self.sar_database:
                 return jsonify({"error": "SAR not found"}), 404
 
-            data = request.get_json()
+            data = request.get_json() or {}
             investigator = data.get("investigator", "Unknown")
             reason = data.get("reason", "")
 
@@ -320,14 +320,12 @@ class ExplainabilityDashboard:
 
         transactions = sar.get("transactions", [])
         if transactions:
-            # Weight transactions by contribution to suspicion
             for i, txn in enumerate(transactions):
                 txn_id = txn.get("transaction_id", f"txn_{i}")
                 amount = txn.get("amount", 0)
                 risk = txn.get("risk_score", 0)
 
-                # Simple attention: combination of amount and risk
-                attention = (amount / 1000) * risk  # Normalize
+                attention = (amount / 1000) * risk
                 weights[txn_id] = float(attention)
 
         # Normalize to sum to 1
@@ -351,7 +349,7 @@ class ExplainabilityDashboard:
             if other_sar.get("crime_type") == current_crime_type:
                 risk_diff = abs(other_sar.get("risk_score", 0) - current_risk)
 
-                if risk_diff < 0.1:  # Similar risk score
+                if risk_diff < 0.1:
                     comparable.append(
                         {
                             "sar_id": other_id,
@@ -361,10 +359,8 @@ class ExplainabilityDashboard:
                         }
                     )
 
-        # Sort by similarity
         comparable.sort(key=lambda x: x["similarity"], reverse=True)
-
-        return comparable[:5]  # Top 5
+        return comparable[:5]
 
     def extract_evidence_trail(self, sar: Dict) -> Dict:
         """
@@ -383,7 +379,6 @@ class ExplainabilityDashboard:
             "citations": [],
         }
 
-        # Transaction evidence
         for txn in sar.get("transactions", []):
             evidence["transactions"].append(
                 {
@@ -396,7 +391,6 @@ class ExplainabilityDashboard:
                 }
             )
 
-        # External data evidence
         if sar.get("sanctions_match"):
             evidence["external_data"].append(
                 {
@@ -415,7 +409,6 @@ class ExplainabilityDashboard:
                 }
             )
 
-        # Behavioral patterns
         if "patterns_matched" in sar:
             for pattern in sar["patterns_matched"]:
                 evidence["behavioral_patterns"].append(
@@ -426,15 +419,10 @@ class ExplainabilityDashboard:
                     }
                 )
 
-        # Citations
         if "narrative" in sar:
-            # Extract citations from narrative
-            # Format: [txn_id: description]
-            narrative = sar["narrative"]
-            # Simple citation extraction (would be more sophisticated in practice)
             import re
 
-            citations = re.findall(r"\[([^\]]+)\]", narrative)
+            citations = re.findall(r"\[([^\]]+)\]", sar["narrative"])
             evidence["citations"] = citations
 
         return evidence
@@ -452,12 +440,9 @@ class ExplainabilityDashboard:
         if "feature_importance" not in sar:
             return json.dumps({})
 
-        # Sort by importance
         features = sorted(
             sar["feature_importance"].items(), key=lambda x: x[1], reverse=True
-        )[
-            :15
-        ]  # Top 15
+        )[:15]
 
         feature_names = [f[0] for f in features]
         importances = [f[1] for f in features]
@@ -504,6 +489,19 @@ class ExplainabilityDashboard:
         if "timestamp" in df.columns and "amount" in df.columns:
             df["timestamp"] = pd.to_datetime(df["timestamp"])
 
+            risk_scores = (
+                df["risk_score"].tolist()
+                if "risk_score" in df.columns
+                else [0.5] * len(df)
+            )
+            marker_sizes = [r * 20 for r in risk_scores]
+
+            text_labels = (
+                df["transaction_id"].tolist()
+                if "transaction_id" in df.columns
+                else df.index.tolist()
+            )
+
             fig = go.Figure(
                 data=[
                     go.Scatter(
@@ -511,13 +509,13 @@ class ExplainabilityDashboard:
                         y=df["amount"],
                         mode="markers+lines",
                         marker=dict(
-                            size=df.get("risk_score", [0.5] * len(df)) * 20,
-                            color=df.get("risk_score", [0.5] * len(df)),
+                            size=marker_sizes,
+                            color=risk_scores,
                             colorscale="RdYlGn_r",
                             showscale=True,
                             colorbar=dict(title="Risk Score"),
                         ),
-                        text=df.get("transaction_id", df.index),
+                        text=text_labels,
                         hovertemplate="<b>%{text}</b><br>Amount: $%{y:,.2f}<br>Date: %{x}<extra></extra>",
                     )
                 ]
@@ -549,7 +547,6 @@ class ExplainabilityDashboard:
         if not transactions:
             return json.dumps({})
 
-        # Build network from transactions
         nodes = set()
         edges = []
 
@@ -564,11 +561,9 @@ class ExplainabilityDashboard:
                 {"source": sender, "target": receiver, "amount": txn.get("amount", 0)}
             )
 
-        # Simple layout (would use networkx for complex graphs)
         node_list = list(nodes)
         node_positions = {node: (i % 5, i // 5) for i, node in enumerate(node_list)}
 
-        # Create edge traces
         edge_traces = []
         for edge in edges:
             x0, y0 = node_positions[edge["source"]]
@@ -583,7 +578,6 @@ class ExplainabilityDashboard:
             )
             edge_traces.append(edge_trace)
 
-        # Create node trace
         node_trace = go.Scatter(
             x=[node_positions[node][0] for node in node_list],
             y=[node_positions[node][1] for node in node_list],

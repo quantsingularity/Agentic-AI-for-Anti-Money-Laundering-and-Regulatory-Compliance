@@ -134,33 +134,42 @@ Based on the analysis above, this activity warrants filing of a Suspicious Activ
     ) -> str:
         """Generate summary paragraph based on typology."""
 
+        if not transactions:
+            return (
+                f"Analysis of transactions by the subject revealed patterns "
+                f"consistent with suspicious activity requiring regulatory reporting."
+            )
+
+        first_txn = transactions[0]
+        second_txn = transactions[1] if len(transactions) > 1 else transactions[0]
+
         summaries = {
             "structuring": (
                 f"Analysis identified a pattern of multiple transactions conducted by the subject "
                 f"in amounts designed to evade Bank Secrecy Act reporting thresholds. Over the analysis period, "
                 f"{len(transactions)} transactions were conducted, each below the $10,000 CTR threshold "
-                f"[CITE: {transactions[0].get('transaction_id', 'TXN_XXX')}:amount, "
-                f"{transactions[1].get('transaction_id', 'TXN_XXX')}:amount]. "
+                f"[CITE: {first_txn.get('transaction_id', 'TXN_XXX')}:amount, "
+                f"{second_txn.get('transaction_id', 'TXN_XXX')}:amount]. "
                 f"The temporal clustering and amount structuring are consistent with intentional evasion."
             ),
             "rapid_movement": (
                 f"Investigation revealed rapid movement of funds through a chain of {len(transactions)} accounts "
-                f"within a compressed timeframe. Funds originated from {transactions[0].get('sender_id', 'UNKNOWN')} "
-                f"[CITE: {transactions[0].get('transaction_id', 'TXN_XXX')}:sender_id] and were layered through "
+                f"within a compressed timeframe. Funds originated from {first_txn.get('sender_id', 'UNKNOWN')} "
+                f"[CITE: {first_txn.get('transaction_id', 'TXN_XXX')}:sender_id] and were layered through "
                 f"multiple intermediary accounts, consistent with money laundering layering techniques."
             ),
             "sanctions_evasion": (
                 f"The subject conducted {len(transactions)} transactions involving entities and jurisdictions "
                 f"subject to OFAC sanctions. Specifically, transactions were directed to "
-                f"{transactions[0].get('receiver_id', 'UNKNOWN')} "
-                f"[CITE: {transactions[0].get('transaction_id', 'TXN_XXX')}:receiver_id], "
-                f"located in {transactions[0].get('receiver_country', 'XX')} "
-                f"[CITE: {transactions[0].get('transaction_id', 'TXN_XXX')}:receiver_country]."
+                f"{first_txn.get('receiver_id', 'UNKNOWN')} "
+                f"[CITE: {first_txn.get('transaction_id', 'TXN_XXX')}:receiver_id], "
+                f"located in {first_txn.get('receiver_country', 'XX')} "
+                f"[CITE: {first_txn.get('transaction_id', 'TXN_XXX')}:receiver_country]."
             ),
             "smurfing": (
                 f"Analysis detected a smurfing pattern with {len(transactions)} deposits to account "
-                f"{transactions[0].get('receiver_id', 'UNKNOWN')} "
-                f"[CITE: {transactions[0].get('transaction_id', 'TXN_XXX')}:receiver_id] "
+                f"{first_txn.get('receiver_id', 'UNKNOWN')} "
+                f"[CITE: {first_txn.get('transaction_id', 'TXN_XXX')}:receiver_id] "
                 f"from multiple source accounts. The coordinated nature and timing suggest organized structuring."
             ),
         }
@@ -175,6 +184,9 @@ Based on the analysis above, this activity warrants filing of a Suspicious Activ
         self, transactions: List[Dict], evidence: Dict, typology: str
     ) -> str:
         """Generate detailed analysis section."""
+
+        if not transactions:
+            return "Insufficient transaction data available for detailed analysis."
 
         analysis_parts = []
 
@@ -313,7 +325,7 @@ Based on the analysis above, this activity warrants filing of a Suspicious Activ
 
             # Validate citations
             citations = self._validate_and_extract_llm_citations(
-                narrative, input_data["transactions"]
+                narrative, input_data.get("transactions", [])
             )
 
             return {
@@ -332,7 +344,7 @@ Based on the analysis above, this activity warrants filing of a Suspicious Activ
     def _construct_llm_prompt(self, input_data: Dict[str, Any]) -> str:
         """Construct prompt for LLM with citation requirements."""
 
-        transactions_json = json.dumps(input_data["transactions"], indent=2)
+        transactions_json = json.dumps(input_data.get("transactions", []), indent=2)
 
         prompt = f"""You are a compliance officer writing a Suspicious Activity Report (SAR) narrative.
 

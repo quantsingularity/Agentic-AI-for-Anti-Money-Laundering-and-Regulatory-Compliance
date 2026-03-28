@@ -5,7 +5,7 @@ Supervised classification of suspicious transactions.
 
 import numpy as np
 import pandas as pd
-from typing import Dict, Tuple, Any
+from typing import Dict, Tuple, Any, Optional
 import xgboost as xgb
 from sklearn.preprocessing import StandardScaler, LabelEncoder
 from sklearn.metrics import classification_report, precision_recall_curve, auc
@@ -44,12 +44,19 @@ class XGBoostClassifier:
         self.model = None
         self.feature_names = None
 
-    def engineer_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        self._sender_stats: Optional[pd.DataFrame] = None
+        self._receiver_stats: Optional[pd.DataFrame] = None
+
+    def engineer_features(self, df: pd.DataFrame, fit: bool = True) -> pd.DataFrame:
         """
         Engineer features from transaction data.
 
         Args:
             df: Transaction DataFrame
+            fit: If True (default), compute and store sender/receiver aggregate
+                 statistics from *this* df (use for training data).
+                 If False, reuse statistics computed during the last fit=True
+                 call (use for validation/test data to avoid data leakage).
 
         Returns:
             DataFrame with engineered features
@@ -57,9 +64,10 @@ class XGBoostClassifier:
         features = df.copy()
 
         # Basic features
+        ts = pd.to_datetime(features["timestamp"])
         features["amount_log"] = np.log1p(features["amount"])
-        features["hour"] = pd.to_datetime(features["timestamp"]).dt.hour
-        features["day_of_week"] = pd.to_datetime(features["timestamp"]).dt.dayofweek
+        features["hour"] = ts.dt.hour
+        features["day_of_week"] = ts.dt.dayofweek
 
         # Encode categorical
         features["sender_country_enc"] = (
@@ -77,21 +85,44 @@ class XGBoostClassifier:
             features["sender_country"] != features["receiver_country"]
         ).astype(int)
 
-        # Aggregate features per sender (requires groupby)
-        sender_stats = (
-            df.groupby("sender_id")
-            .agg({"amount": ["count", "sum", "mean", "std"], "transaction_id": "count"})
-            .reset_index()
-        )
-        sender_stats.columns = [
-            "sender_id",
-            "sender_txn_count",
-            "sender_total_amount",
-            "sender_mean_amount",
-            "sender_std_amount",
-            "sender_txn_count2",
-        ]
-        sender_stats["sender_std_amount"] = sender_stats["sender_std_amount"].fillna(0)
+        if fit:
+            sender_stats = (
+                df.groupby("sender_id")
+                .agg({"amount": ["count", "sum", "mean", "std"]})
+                .reset_index()
+            )
+            sender_stats.columns = [
+                "sender_id",
+                "sender_txn_count",
+                "sender_total_amount",
+                "sender_mean_amount",
+                "sender_std_amount",
+            ]
+            sender_stats["sender_std_amount"] = sender_stats[
+                "sender_std_amount"
+            ].fillna(0)
+            self._sender_stats = sender_stats
+
+            receiver_stats = (
+                df.groupby("receiver_id")
+                .agg({"amount": ["count", "sum", "mean"]})
+                .reset_index()
+            )
+            receiver_stats.columns = [
+                "receiver_id",
+                "receiver_txn_count",
+                "receiver_total_amount",
+                "receiver_mean_amount",
+            ]
+            self._receiver_stats = receiver_stats
+        else:
+            if self._sender_stats is None or self._receiver_stats is None:
+                raise RuntimeError(
+                    "engineer_features(fit=False) called before a fit=True call. "
+                    "Call engineer_features on training data first."
+                )
+            sender_stats = self._sender_stats
+            receiver_stats = self._receiver_stats
 
         features = features.merge(
             sender_stats[
@@ -107,26 +138,9 @@ class XGBoostClassifier:
             how="left",
         )
 
-        # Receiver stats
-        receiver_stats = (
-            df.groupby("receiver_id")
-            .agg(
-                {
-                    "amount": ["count", "sum", "mean"],
-                }
-            )
-            .reset_index()
-        )
-        receiver_stats.columns = [
-            "receiver_id",
-            "receiver_txn_count",
-            "receiver_total_amount",
-            "receiver_mean_amount",
-        ]
-
         features = features.merge(receiver_stats, on="receiver_id", how="left")
 
-        # Fill NaN for single transactions
+        # Fill NaN for entities unseen during training
         for col in [
             "sender_txn_count",
             "sender_total_amount",
@@ -286,6 +300,11 @@ class XGBoostClassifier:
         Returns:
             Dict with metrics
         """
+        if self.model is None:
+            raise RuntimeError(
+                "Model has not been trained yet. Call train() before evaluate()."
+            )
+
         y_pred = self.predict(X)
         y_proba = self.predict_proba(X)
 
@@ -346,6 +365,8 @@ class XGBoostClassifier:
             "label_encoder": self.label_encoder,
             "feature_names": self.feature_names,
             "task": self.task,
+            "sender_stats": self._sender_stats,
+            "receiver_stats": self._receiver_stats,
         }
         with open(filepath, "wb") as f:
             pickle.dump(model_dict, f)
@@ -360,3 +381,6 @@ class XGBoostClassifier:
         self.label_encoder = model_dict["label_encoder"]
         self.feature_names = model_dict["feature_names"]
         self.task = model_dict["task"]
+        # Restore fitted stats so the loaded model can call engineer_features(fit=False)
+        self._sender_stats = model_dict.get("sender_stats")
+        self._receiver_stats = model_dict.get("receiver_stats")

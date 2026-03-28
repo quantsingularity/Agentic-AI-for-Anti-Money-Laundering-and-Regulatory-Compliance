@@ -62,7 +62,7 @@ class RedisCache:
         Args:
             key: Cache key
             value: Value to cache (will be JSON serialized)
-            ttl: Time-to-live in seconds
+            ttl: Time-to-live in seconds (None = no expiry, 0 = expire immediately)
             namespace: Key namespace prefix
 
         Returns:
@@ -72,7 +72,7 @@ class RedisCache:
             full_key = f"{namespace}:{key}"
             serialized = json.dumps(value)
 
-            if ttl:
+            if ttl is not None:
                 return self.client.setex(full_key, ttl, serialized)
             else:
                 return self.client.set(full_key, serialized)
@@ -240,7 +240,7 @@ class RedisCache:
                 if value:
                     try:
                         result[key] = json.loads(value)
-                    except:
+                    except Exception:
                         result[key] = None
 
             return result

@@ -106,7 +106,9 @@ class DataValidator:
             comp["similarity_score"]
             for comp in comparison_results["feature_comparisons"].values()
         ]
-        comparison_results["overall_similarity"] = np.mean(similarity_scores)
+        comparison_results["overall_similarity"] = (
+            np.mean(similarity_scores) if similarity_scores else 0.0
+        )
 
         logger.info(
             f"Overall distribution similarity: {comparison_results['overall_similarity']:.3f}"
@@ -225,9 +227,9 @@ class DataValidator:
             "dataset": dataset_name,
             "samples": len(y_test),
             "positive_samples": int(np.sum(y_test)),
-            "precision": precision_score(y_test, y_pred),
-            "recall": recall_score(y_test, y_pred),
-            "f1_score": f1_score(y_test, y_pred),
+            "precision": precision_score(y_test, y_pred, zero_division=0),
+            "recall": recall_score(y_test, y_pred, zero_division=0),
+            "f1_score": f1_score(y_test, y_pred, zero_division=0),
             "accuracy": np.mean(y_test == y_pred),
         }
 
@@ -235,7 +237,7 @@ class DataValidator:
             try:
                 metrics["roc_auc"] = roc_auc_score(y_test, y_proba)
                 metrics["avg_precision"] = average_precision_score(y_test, y_proba)
-            except:
+            except Exception:
                 pass
 
         # Confusion matrix
@@ -401,8 +403,6 @@ class DataValidator:
         """
         Load data from database (placeholder for actual implementation).
         """
-        # This would contain actual database connection logic
-        # For now, return empty DataFrame
         logger.warning("Database loading not implemented - returning empty DataFrame")
         return pd.DataFrame()
 
@@ -410,7 +410,6 @@ class DataValidator:
         """
         Load data from API (placeholder for actual implementation).
         """
-        # This would contain actual API integration logic
         logger.warning("API loading not implemented - returning empty DataFrame")
         return pd.DataFrame()
 
@@ -423,13 +422,27 @@ class AnonymizedDataProcessor:
 
     def __init__(self):
         """Initialize anonymized data processor."""
-        from presidio_analyzer import AnalyzerEngine
-        from presidio_anonymizer import AnonymizerEngine
 
-        self.analyzer = AnalyzerEngine()
-        self.anonymizer = AnonymizerEngine()
+        self._analyzer = None
+        self._anonymizer = None
 
         logger.info("Initialized Anonymized Data Processor")
+
+    def _ensure_presidio(self):
+        """Lazily import and initialise presidio engines."""
+        if self._analyzer is None or self._anonymizer is None:
+            try:
+                from presidio_analyzer import AnalyzerEngine
+                from presidio_anonymizer import AnonymizerEngine
+            except ImportError as exc:
+                raise ImportError(
+                    "The 'presidio-analyzer' and 'presidio-anonymizer' packages are "
+                    "required for AnonymizedDataProcessor. "
+                    "Install them with: pip install presidio-analyzer presidio-anonymizer"
+                ) from exc
+
+            self._analyzer = AnalyzerEngine()
+            self._anonymizer = AnonymizerEngine()
 
     def anonymize_dataset(
         self, data: pd.DataFrame, pii_columns: Optional[List[str]] = None
@@ -444,6 +457,9 @@ class AnonymizedDataProcessor:
         Returns:
             Anonymized DataFrame
         """
+        # Presidio engines are created only when this method is first called.
+        self._ensure_presidio()
+
         logger.info("Anonymizing dataset...")
 
         anonymized_data = data.copy()
