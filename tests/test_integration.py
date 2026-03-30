@@ -195,7 +195,7 @@ def test_end_to_end_pipeline(synthetic_data, tmp_path):
 
         assert sar_file.exists()
 
-    print(f"\nEnd-to-end test completed successfully!")
+    print("\nEnd-to-end test completed successfully!")
     print(f"  Data generated: {len(synthetic_data)} transactions")
     print(f"  Fraud cases: {synthetic_data['is_fraud'].sum()}")
     print(f"  Predictions: {len(predictions)}")

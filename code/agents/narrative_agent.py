@@ -136,8 +136,8 @@ Based on the analysis above, this activity warrants filing of a Suspicious Activ
 
         if not transactions:
             return (
-                f"Analysis of transactions by the subject revealed patterns "
-                f"consistent with suspicious activity requiring regulatory reporting."
+                "Analysis of transactions by the subject revealed patterns "
+                "consistent with suspicious activity requiring regulatory reporting."
             )
 
         first_txn = transactions[0]

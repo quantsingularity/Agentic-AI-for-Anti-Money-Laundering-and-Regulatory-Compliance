@@ -75,7 +75,6 @@ def test_architecture_diagram_skips_without_graphviz(tmp_path):
     out.mkdir()
 
     try:
-        import graphviz  # type: ignore
 
         has_graphviz = True
     except Exception:
