@@ -8,25 +8,25 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from loguru import logger
-import numpy as np
-from datetime import datetime
 import json
+from code.adversarial.adversarial_tester import AdversarialTester
+from code.analysis.cost_benefit import CostBenefitAnalyzer
+from code.caching.redis_cache import RedisCache
+from code.dashboard.explainability_dashboard import ExplainabilityDashboard
+from code.data.synthetic_generator import SyntheticTransactionGenerator
+from code.monitoring.mlflow_monitor import (
+    DriftDetector,
+    MLflowMonitor,
+    PrometheusMetrics,
+)
 
 # Import enhanced components
 from code.streaming.kafka_consumer import TransactionStreamConsumer
-from code.caching.redis_cache import RedisCache
-from code.adversarial.adversarial_tester import AdversarialTester
-from code.monitoring.mlflow_monitor import (
-    MLflowMonitor,
-    DriftDetector,
-    PrometheusMetrics,
-)
 from code.validation.data_validator import DataValidator
-from code.analysis.cost_benefit import CostBenefitAnalyzer
-from code.dashboard.explainability_dashboard import ExplainabilityDashboard
+from datetime import datetime
 
-from code.data.synthetic_generator import SyntheticTransactionGenerator
+import numpy as np
+from loguru import logger
 
 
 class EnhancedAMLSystem:
@@ -159,8 +159,8 @@ class EnhancedAMLSystem:
 
     def _train_model_with_monitoring(self, data):
         """Train model with MLflow tracking."""
-        from sklearn.model_selection import train_test_split
         from sklearn.ensemble import RandomForestClassifier
+        from sklearn.model_selection import train_test_split
 
         # Start MLflow run
         self.mlflow_monitor.start_run(

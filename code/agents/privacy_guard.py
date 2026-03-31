@@ -4,7 +4,8 @@ Implements PII redaction and privacy safeguards before any LLM processing.
 """
 
 import re
-from typing import Dict, Any
+from typing import Any, Dict
+
 from .base_agent import BaseAgent
 
 

@@ -3,14 +3,15 @@ Interactive Explainability Dashboard for AML Investigations
 Web-based dashboard for SAR generation reasoning and evidence trails
 """
 
-from flask import Flask, render_template, jsonify, request
-from typing import Dict, List
-import pandas as pd
-from loguru import logger
-from datetime import datetime
 import json
+from datetime import datetime
+from typing import Dict, List
+
+import pandas as pd
 import plotly
 import plotly.graph_objs as go
+from flask import Flask, jsonify, render_template, request
+from loguru import logger
 
 
 class ExplainabilityDashboard:

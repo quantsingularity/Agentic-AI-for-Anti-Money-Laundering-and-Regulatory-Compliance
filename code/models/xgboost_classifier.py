@@ -3,13 +3,14 @@ XGBoost Crime Typology Classifier
 Supervised classification of suspicious transactions.
 """
 
+import pickle
+from typing import Any, Dict, Optional, Tuple
+
 import numpy as np
 import pandas as pd
-from typing import Dict, Tuple, Any, Optional
 import xgboost as xgb
-from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.metrics import classification_report, precision_recall_curve, auc
-import pickle
+from sklearn.metrics import auc, classification_report, precision_recall_curve
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 
 class XGBoostClassifier:
@@ -312,9 +313,9 @@ class XGBoostClassifier:
 
         if self.task == "binary":
             from sklearn.metrics import (
+                f1_score,
                 precision_score,
                 recall_score,
-                f1_score,
                 roc_auc_score,
             )
 

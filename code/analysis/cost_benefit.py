@@ -3,11 +3,12 @@ Cost-Benefit Analysis Framework for AML Systems
 Quantifies business impact of false positives vs false negatives
 """
 
-from typing import Dict, Optional, List, Tuple
+import json
+from datetime import datetime
+from typing import Dict, List, Optional, Tuple
+
 import numpy as np
 from loguru import logger
-from datetime import datetime
-import json
 
 
 class CostBenefitAnalyzer:

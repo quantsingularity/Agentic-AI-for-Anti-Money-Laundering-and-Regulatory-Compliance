@@ -8,10 +8,9 @@ for quick checks.
 
 import argparse
 import json
-from pathlib import Path
 import logging
-
 from code.scripts.run_experiments import ExperimentRunner
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 

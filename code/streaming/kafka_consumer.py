@@ -3,11 +3,12 @@ Kafka Consumer for Real-time Transaction Streaming
 Handles distributed transaction processing at scale (10M+ txns/day)
 """
 
-from typing import Dict, List, Callable, Optional
-from kafka import KafkaConsumer
 import json
-from loguru import logger
 import time
+from typing import Callable, Dict, List, Optional
+
+from kafka import KafkaConsumer
+from loguru import logger
 
 
 class TransactionStreamConsumer:

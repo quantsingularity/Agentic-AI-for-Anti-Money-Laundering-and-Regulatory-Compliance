@@ -3,11 +3,12 @@ Deterministic Synthetic Transaction Generator
 Generates realistic AML transaction data with configurable fraud typologies.
 """
 
+import json
+from datetime import datetime, timedelta
+from typing import Any, Dict
+
 import numpy as np
 import pandas as pd
-from typing import Dict, Any
-from datetime import datetime, timedelta
-import json
 
 
 class SyntheticTransactionGenerator:

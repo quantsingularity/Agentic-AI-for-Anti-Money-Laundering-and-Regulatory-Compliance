@@ -3,21 +3,22 @@ Main Experiment Runner
 Executes complete experimental suite and generates deterministic results.
 """
 
+import json
 import sys
 import time
-import json
-import numpy as np
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
+import numpy as np
 from loguru import logger
 
 # Add code directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+from code.agents.narrative_agent import NarrativeAgent
+from code.agents.privacy_guard import PrivacyGuard
 from code.data.synthetic_generator import SyntheticTransactionGenerator
 from code.models.xgboost_classifier import XGBoostClassifier
-from code.agents.privacy_guard import PrivacyGuard
-from code.agents.narrative_agent import NarrativeAgent
 
 
 class ExperimentRunner:
@@ -354,13 +355,13 @@ class ExperimentRunner:
     def _compute_metrics(self, y_true, y_pred, y_proba):
         """Compute evaluation metrics."""
         from sklearn.metrics import (
-            precision_score,
-            recall_score,
-            f1_score,
-            roc_auc_score,
-            precision_recall_curve,
             auc,
             confusion_matrix,
+            f1_score,
+            precision_recall_curve,
+            precision_score,
+            recall_score,
+            roc_auc_score,
         )
 
         tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()

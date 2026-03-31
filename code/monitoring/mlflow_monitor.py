@@ -3,15 +3,16 @@ Production Monitoring and Model Drift Detection
 Integrates MLflow for experiment tracking and Prometheus for system monitoring
 """
 
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional
+
 import mlflow
 import mlflow.sklearn
 import mlflow.xgboost
-from typing import Dict, Any, List, Optional
 import numpy as np
 import pandas as pd
 from loguru import logger
-from datetime import datetime, timedelta
-from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
+from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 
 
 class MLflowMonitor:

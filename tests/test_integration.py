@@ -3,17 +3,18 @@ Integration Test - End-to-End Pipeline
 Tests complete workflow from data generation to SAR generation.
 """
 
-import pytest
+import json
 import sys
 from pathlib import Path
-import json
+
+import pytest
 
 # Add code to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from code.data.synthetic_generator import SyntheticTransactionGenerator
-from code.agents.privacy_guard import PrivacyGuard
 from code.agents.narrative_agent import NarrativeAgent
+from code.agents.privacy_guard import PrivacyGuard
+from code.data.synthetic_generator import SyntheticTransactionGenerator
 from code.models.xgboost_classifier import XGBoostClassifier
 
 

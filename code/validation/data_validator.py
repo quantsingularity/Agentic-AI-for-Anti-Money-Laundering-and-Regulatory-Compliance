@@ -3,21 +3,22 @@ Real-World Data Validation and Comparison Framework
 Compares synthetic vs real-world performance metrics
 """
 
-from typing import Dict, List, Tuple, Optional
-import pandas as pd
-import numpy as np
-from loguru import logger
-from datetime import datetime
 import json
+from datetime import datetime
+from typing import Dict, List, Optional, Tuple
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from loguru import logger
 from sklearn.metrics import (
-    precision_score,
-    recall_score,
-    f1_score,
-    roc_auc_score,
     average_precision_score,
     confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
 )
-import matplotlib.pyplot as plt
 
 
 class DataValidator:

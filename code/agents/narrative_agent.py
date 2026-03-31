@@ -3,10 +3,12 @@ Narrative Agent - Constrained LLM for SAR Generation
 Generates Suspicious Activity Report narratives with mandatory evidence citation.
 """
 
-from typing import Dict, List, Any
 import json
-from .base_agent import BaseAgent
+from typing import Any, Dict, List
+
 from loguru import logger
+
+from .base_agent import BaseAgent
 
 
 class NarrativeAgent(BaseAgent):

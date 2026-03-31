@@ -1,8 +1,7 @@
 import json
+from code.scripts import generate_figures as gf
 
 import pytest
-
-from code.scripts import generate_figures as gf
 
 
 @pytest.fixture

@@ -3,11 +3,12 @@ Redis Cache Manager for High-Performance AML Processing
 Provides caching layer for sanctions lists, entity profiles, and ML model outputs
 """
 
-import redis
-import json
-from typing import Any, Optional, Dict, List
-from loguru import logger
 import hashlib
+import json
+from typing import Any, Dict, List, Optional
+
+import redis
+from loguru import logger
 
 
 class RedisCache:

@@ -1,7 +1,6 @@
-from pathlib import Path
 import json
-
 from code.scripts import populate_paper as pp
+from pathlib import Path
 
 
 def test_populate_paper_writes_file(tmp_path):
