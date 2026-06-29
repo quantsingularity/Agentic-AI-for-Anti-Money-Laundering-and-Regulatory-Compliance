@@ -6,9 +6,12 @@ Integrates MLflow for experiment tracking and Prometheus for system monitoring
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
 
-import mlflow
-import mlflow.sklearn
-import mlflow.xgboost
+try:
+    import mlflow
+    import mlflow.sklearn
+    import mlflow.xgboost
+except ImportError:  # pragma: no cover - optional dependency
+    mlflow = None
 import numpy as np
 import pandas as pd
 from loguru import logger

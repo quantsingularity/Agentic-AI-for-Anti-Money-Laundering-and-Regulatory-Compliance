@@ -8,8 +8,13 @@ from datetime import datetime
 from typing import Dict, List
 
 import pandas as pd
-import plotly
-import plotly.graph_objs as go
+
+try:
+    import plotly
+    import plotly.graph_objs as go
+except ImportError:  # pragma: no cover - optional dependency
+    plotly = None
+    go = None
 from flask import Flask, jsonify, render_template, request
 from loguru import logger
 

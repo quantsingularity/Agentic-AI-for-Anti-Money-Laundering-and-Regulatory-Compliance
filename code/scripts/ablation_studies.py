@@ -35,7 +35,7 @@ def main(
 
     out_file = output_dir / "ablation_results.json"
     with open(out_file, "w") as f:
-        json.dump(ablations, f, indent=2)
+        json.dump(ablations, f, indent=2, default=str)
 
     logger.info("Ablation results saved to: %s", out_file)
     return ablations

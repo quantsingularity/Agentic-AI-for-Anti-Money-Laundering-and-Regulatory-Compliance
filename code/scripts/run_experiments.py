@@ -21,6 +21,21 @@ from code.data.synthetic_generator import SyntheticTransactionGenerator
 from code.models.xgboost_classifier import XGBoostClassifier
 
 
+def _json_default(o):
+    """JSON serializer for numpy scalar/array and other non-native types."""
+    import numpy as np
+
+    if isinstance(o, np.integer):
+        return int(o)
+    if isinstance(o, np.floating):
+        return float(o)
+    if isinstance(o, np.ndarray):
+        return o.tolist()
+    if isinstance(o, (np.bool_,)):
+        return bool(o)
+    return str(o)
+
+
 class ExperimentRunner:
     """Runs complete experimental suite with deterministic results."""
 
@@ -122,7 +137,7 @@ class ExperimentRunner:
 
         output_file = self.output_dir / "full_experiments.json"
         with open(output_file, "w") as f:
-            json.dump(results, f, indent=2)
+            json.dump(results, f, indent=2, default=_json_default)
 
         logger.info(f"\n{'='*60}")
         logger.info(f"PIPELINE COMPLETED in {results['total_execution_time']:.2f}s")
@@ -144,7 +159,7 @@ class ExperimentRunner:
         # Validation stats
         stats = generator.validate_distribution(df)
         with open(data_dir / "validation_stats.json", "w") as f:
-            json.dump(stats, f, indent=2)
+            json.dump(stats, f, indent=2, default=_json_default)
 
         logger.info(
             f"Generated {len(df)} transactions ({df['is_fraud'].sum()} fraudulent)"

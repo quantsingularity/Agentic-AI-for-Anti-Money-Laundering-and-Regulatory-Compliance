@@ -98,6 +98,17 @@ class SyntheticTransactionGenerator:
         # Generate fraudulent transactions (distributed across typologies)
         fraud_txns = self._generate_fraud(self.n_fraud)
 
+        # The typology generators (clustered smurfing, layering chains) can
+        # undershoot the requested count, which would make the total smaller than
+        # ``n_transactions`` and skew the fraud rate. Reconcile to exactly
+        # ``n_fraud`` rows so the dataset size and fraud rate are deterministic.
+        if len(fraud_txns) > self.n_fraud:
+            fraud_txns = fraud_txns.iloc[: self.n_fraud].reset_index(drop=True)
+        elif 0 < len(fraud_txns) < self.n_fraud:
+            deficit = self.n_fraud - len(fraud_txns)
+            extra = fraud_txns.sample(n=deficit, replace=True, random_state=self.seed)
+            fraud_txns = pd.concat([fraud_txns, extra], ignore_index=True)
+
         # Combine and shuffle
         all_txns = pd.concat([benign_txns, fraud_txns], ignore_index=True)
 

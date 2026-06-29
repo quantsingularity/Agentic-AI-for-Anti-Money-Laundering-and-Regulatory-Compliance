@@ -7,7 +7,10 @@ import json
 import time
 from typing import Callable, Dict, List, Optional
 
-from kafka import KafkaConsumer
+try:
+    from kafka import KafkaConsumer
+except ImportError:  # pragma: no cover - optional dependency
+    KafkaConsumer = None
 from loguru import logger
 
 
@@ -51,6 +54,11 @@ class TransactionStreamConsumer:
             **self.config,
         }
 
+        if KafkaConsumer is None:  # pragma: no cover - optional dependency
+            raise ImportError(
+                "kafka-python is required for the streaming consumer. "
+                "Install it with `pip install kafka-python`."
+            )
         self.consumer = KafkaConsumer(topic, **consumer_config)
         self.running = False
         self.processed_count = 0

@@ -7,7 +7,10 @@ import hashlib
 import json
 from typing import Any, Dict, List, Optional
 
-import redis
+try:
+    import redis
+except ImportError:  # pragma: no cover - optional dependency
+    redis = None
 from loguru import logger
 
 
@@ -35,6 +38,10 @@ class RedisCache:
             password: Optional authentication password
             decode_responses: Whether to decode responses to strings
         """
+        if redis is None:  # pragma: no cover - optional dependency
+            raise ImportError(
+                "redis is required for RedisCache. Install it with `pip install redis`."
+            )
         self.client = redis.Redis(
             host=host,
             port=port,
