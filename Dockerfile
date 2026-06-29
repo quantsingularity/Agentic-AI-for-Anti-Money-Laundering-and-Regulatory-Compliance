@@ -33,7 +33,7 @@ RUN pip install --upgrade pip setuptools wheel && \
     python -m spacy download en_core_web_sm
 
 # Copy application code
-COPY code/ ./code/
+COPY aml/ ./aml/
 COPY data/ ./data/
 COPY scripts/ ./scripts/
 COPY tests/ ./tests/

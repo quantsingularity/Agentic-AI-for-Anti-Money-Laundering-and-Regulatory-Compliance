@@ -6,7 +6,7 @@ Executes complete experimental suite and generates deterministic results.
 import json
 import sys
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -15,10 +15,11 @@ from loguru import logger
 # Add code directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from code.agents.narrative_agent import NarrativeAgent
-from code.agents.privacy_guard import PrivacyGuard
-from code.data.synthetic_generator import SyntheticTransactionGenerator
-from code.models.xgboost_classifier import XGBoostClassifier
+from aml.agents.judge_agent import JudgeAgent
+from aml.agents.narrative_agent import NarrativeAgent
+from aml.agents.privacy_guard import PrivacyGuard
+from aml.data.synthetic_generator import SyntheticTransactionGenerator
+from aml.models.xgboost_classifier import XGBoostClassifier
 
 
 def _json_default(o):
@@ -80,7 +81,7 @@ class ExperimentRunner:
                 "seed": self.seed,
                 "n_transactions": n_transactions,
                 "fraud_rate": fraud_rate,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             },
             "data_generation": {},
             "baseline_results": {},
@@ -272,8 +273,15 @@ class ExperimentRunner:
 
         return self._compute_metrics(y_test, predictions, proba)
 
-    def _run_agentic_system(self, train_df, test_df):
-        """Run full agentic system."""
+    def _run_agentic_system(self, train_df, test_df, use_judge=True):
+        """Run full agentic system.
+
+        The detector (XGBoost) raises alerts; when ``use_judge`` is True the
+        Agent-as-Judge reviews each alert and dismisses weakly-supported ones,
+        so the agentic decisions differ from the raw classifier. Setting
+        ``use_judge=False`` reproduces the detector-only behaviour (used by the
+        ablation study).
+        """
         # Use XGBoost as detector + add agent layers
         classifier = XGBoostClassifier(
             task="binary", seed=self.seed, **self.model_params
@@ -290,9 +298,31 @@ class ExperimentRunner:
         privacy_guard = PrivacyGuard()
         privacy_guard.process(test_df.to_dict("records"))
 
-        # Classification
+        # Classification (detector alerts)
         predictions = classifier.predict(X_test)
         proba = classifier.predict_proba(X_test)[:, 1]
+
+        # Agent-as-Judge: review the detector's output. The judge (a) dismisses
+        # weakly-supported alerts as likely false positives and (b) escalates
+        # unflagged transactions that the model ranked as elevated-but-subthreshold
+        # AND that carry a corroborating typology red flag, recovering frauds the
+        # statistical model narrowly missed. This makes the agentic decisions
+        # differ from the raw classifier.
+        judge_dismissals = 0
+        judge_escalations = 0
+        if use_judge:
+            judge = JudgeAgent()
+            test_records = test_df.reset_index(drop=True).to_dict("records")
+            adjudicated = predictions.copy()
+            for idx in np.where(predictions == 1)[0]:
+                if not judge.review(test_records[idx], float(proba[idx])):
+                    adjudicated[idx] = 0
+                    judge_dismissals += 1
+            for idx in np.where(predictions == 0)[0]:
+                if judge.escalate(test_records[idx], float(proba[idx])):
+                    adjudicated[idx] = 1
+                    judge_escalations += 1
+            predictions = adjudicated
 
         # Narrative generation for suspicious transactions
         narrative_agent = NarrativeAgent()
@@ -324,6 +354,8 @@ class ExperimentRunner:
             np.std(sar_generation_times) if sar_generation_times else 0.0
         )
         metrics["sars_generated"] = len(suspicious_indices)
+        metrics["judge_dismissals"] = judge_dismissals
+        metrics["judge_escalations"] = judge_escalations
 
         return metrics
 
@@ -335,9 +367,11 @@ class ExperimentRunner:
         logger.info("  Ablation: No Privacy Guard")
         ablations["no_privacy_guard"] = self._run_xgboost(train_df, test_df)
 
-        # Ablation 2: No Agent-as-Judge (assume all pass)
+        # Ablation 2: No Agent-as-Judge (detector alerts pass through unreviewed)
         logger.info("  Ablation: No Agent-as-Judge")
-        ablations["no_judge_agent"] = self._run_agentic_system(train_df, test_df)
+        ablations["no_judge_agent"] = self._run_agentic_system(
+            train_df, test_df, use_judge=False
+        )
 
         return ablations
 
@@ -402,7 +436,13 @@ class ExperimentRunner:
 
     def _generate_summary(self, results):
         """Generate summary statistics."""
-        baseline = results["baseline_results"]["xgboost"]
+        # Select the genuinely strongest baseline by F1 rather than assuming
+        # XGBoost is best (the rule-based detector can outscore it on F1).
+        baseline_results = results["baseline_results"]
+        best_baseline_name = max(
+            baseline_results, key=lambda name: baseline_results[name].get("f1", 0.0)
+        )
+        baseline = baseline_results[best_baseline_name]
         agentic = results["agentic_results"]
 
         f1_improvement = agentic["f1"] - baseline["f1"]
@@ -422,7 +462,7 @@ class ExperimentRunner:
         mean_sar_time = agentic.get("sar_generation_time_mean", 0)
 
         summary = {
-            "best_baseline": "xgboost",
+            "best_baseline": best_baseline_name,
             "best_baseline_f1": baseline["f1"],
             "agentic_f1": agentic["f1"],
             "f1_improvement": f1_improvement,
@@ -430,7 +470,8 @@ class ExperimentRunner:
             "mean_sar_generation_time": mean_sar_time,
             "key_findings": [
                 f"Agentic system achieves {agentic['f1']:.3f} F1 score",
-                f"{rel_improvement_pct:.1f}% improvement over XGBoost baseline ({baseline['f1']:.3f})",
+                f"{rel_improvement_pct:.1f}% improvement over best baseline "
+                f"{best_baseline_name} ({baseline['f1']:.3f})",
                 f"{fpr_reduction_pct:.1f}% reduction in false positive rate",
                 f"Mean SAR generation time: {mean_sar_time:.2f}s",
             ],

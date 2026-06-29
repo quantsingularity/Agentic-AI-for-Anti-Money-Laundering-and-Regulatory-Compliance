@@ -20,7 +20,7 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from code.scripts.run_experiments import ExperimentRunner
+from aml.scripts.run_experiments import ExperimentRunner
 
 
 def _set_global_determinism(seed: int) -> None:

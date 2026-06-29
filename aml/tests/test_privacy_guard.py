@@ -1,4 +1,4 @@
-from code.agents.privacy_guard import PrivacyGuard
+from aml.agents.privacy_guard import PrivacyGuard
 
 
 def test_privacy_guard_redacts_single():

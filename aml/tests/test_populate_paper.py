@@ -1,6 +1,7 @@
 import json
-from code.scripts import populate_paper as pp
 from pathlib import Path
+
+from aml.scripts import populate_paper as pp
 
 
 def test_populate_paper_writes_file(tmp_path):

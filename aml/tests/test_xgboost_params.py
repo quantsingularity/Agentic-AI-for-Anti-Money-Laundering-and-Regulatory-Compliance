@@ -1,4 +1,4 @@
-from code.models.xgboost_classifier import XGBoostClassifier
+from aml.models.xgboost_classifier import XGBoostClassifier
 
 
 def test_xgboost_n_estimators_param():

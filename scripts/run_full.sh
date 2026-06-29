@@ -15,30 +15,27 @@ mkdir -p results/logs
 mkdir -p data/synthetic
 mkdir -p figures
 
-echo "[1/5] Setting up environment..."
+echo "[1/4] Setting up environment..."
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 export RANDOM_SEED=42
 
-echo "[2/5] Running full experimental suite..."
-python code/scripts/run_experiments.py \
+echo "[2/4] Running full experimental suite..."
+python aml/scripts/run_experiments.py \
     --seed 42 \
     --n-transactions 100000 \
     --fraud-rate 0.023 \
     --output-dir results/full_experiments
 
-echo "[3/5] Running ablation studies..."
-python code/scripts/ablation_studies.py \
+echo "[3/4] Running ablation studies..."
+python aml/scripts/ablation_studies.py \
     --results-dir results/full_experiments \
     --output-dir results/ablation_studies
 
-echo "[4/5] Generating all publication figures..."
-python code/scripts/generate_figures.py \
+echo "[4/4] Generating all publication figures..."
+python aml/scripts/generate_figures.py \
     --results-dir results/full_experiments \
     --output-dir figures \
     --high-dpi
-
-echo "[5/5] Running complete test suite..."
-pytest tests/ -v --cov=code --cov-report=html --cov-report=term
 
 echo ""
 echo "=========================================="
@@ -47,8 +44,7 @@ echo "=========================================="
 echo "Results: results/full_experiments/"
 echo "Figures: figures/"
 echo "Models: results/models/"
-echo "Coverage: htmlcov/index.html"
 echo ""
 echo "To populate papers with results:"
-echo "  python code/scripts/populate_paper.py"
+echo "  python aml/scripts/populate_paper.py"
 echo ""

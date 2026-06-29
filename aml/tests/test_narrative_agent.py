@@ -1,4 +1,4 @@
-from code.agents.narrative_agent import NarrativeAgent
+from aml.agents.narrative_agent import NarrativeAgent
 
 
 def test_narrative_template_generation():

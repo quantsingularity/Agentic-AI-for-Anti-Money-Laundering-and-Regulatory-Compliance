@@ -37,7 +37,7 @@ A multi-agent system that automates end-to-end Suspicious Activity Report (SAR) 
 
 ## Agentic SAR Pipeline
 
-The `Orchestrator` (`code/agents/orchestrator.py`) coordinates eight specialized agents to process transactions and produce a final SAR.
+The `Orchestrator` (`aml/agents/orchestrator.py`) coordinates eight specialized agents to process transactions and produce a final SAR.
 
 | Step                              | Agent               | Function                                                                               |
 | :-------------------------------- | :------------------ | :------------------------------------------------------------------------------------- |
@@ -54,21 +54,21 @@ The `Orchestrator` (`code/agents/orchestrator.py`) coordinates eight specialized
 
 ## Repository Structure
 
-| Path                | Description                                              |
-| :------------------ | :------------------------------------------------------- |
-| `code/agents/`      | Orchestrator, narrative agent, privacy guard, base agent |
-| `code/models/`      | XGBoost classifier training and inference                |
-| `code/analysis/`    | Cost-benefit engine and threshold optimization           |
-| `code/dashboard/`   | Flask explainability dashboard and HTML templates        |
-| `code/streaming/`   | Kafka consumer for real-time transaction ingestion       |
-| `code/caching/`     | Redis caching for entity profiles and risk scores        |
-| `code/monitoring/`  | MLflow experiment tracking and model versioning          |
-| `code/adversarial/` | Evasion technique simulation and robustness testing      |
-| `code/validation/`  | Data distribution comparison and real-data validation    |
-| `code/scripts/`     | System runner, ablation studies, benchmarking            |
-| `monitoring/`       | Prometheus and Grafana configuration files               |
-| `data/`             | Synthetic and sample data for testing                    |
-| `tests/`            | Unit and integration tests                               |
+| Path               | Description                                              |
+| :----------------- | :------------------------------------------------------- |
+| `aml/agents/`      | Orchestrator, narrative agent, privacy guard, base agent |
+| `aml/models/`      | XGBoost classifier training and inference                |
+| `aml/analysis/`    | Cost-benefit engine and threshold optimization           |
+| `aml/dashboard/`   | Flask explainability dashboard and HTML templates        |
+| `aml/streaming/`   | Kafka consumer for real-time transaction ingestion       |
+| `aml/caching/`     | Redis caching for entity profiles and risk scores        |
+| `aml/monitoring/`  | MLflow experiment tracking and model versioning          |
+| `aml/adversarial/` | Evasion technique simulation and robustness testing      |
+| `aml/validation/`  | Data distribution comparison and real-data validation    |
+| `aml/scripts/`     | System runner, ablation studies, benchmarking            |
+| `monitoring/`      | Prometheus and Grafana configuration files               |
+| `data/`            | Synthetic and sample data for testing                    |
+| `aml/tests/`       | Unit and integration tests                               |
 
 ---
 
@@ -132,12 +132,12 @@ pip install -r requirements.txt
 
 ## Testing
 
-| Type                   | Command                                         |
-| :--------------------- | :---------------------------------------------- |
-| Unit tests             | `pytest tests/`                                 |
-| Integration tests      | `pytest tests/test_integration.py`              |
-| Adversarial tests      | `python code/adversarial/adversarial_tester.py` |
-| Performance benchmarks | `python code/scripts/benchmark_system.py`       |
+| Type                   | Command                                        |
+| :--------------------- | :--------------------------------------------- |
+| Unit tests             | `pytest aml/tests/`                            |
+| Integration tests      | `pytest aml/tests/test_integration.py`         |
+| Adversarial tests      | `python aml/adversarial/adversarial_tester.py` |
+| Performance benchmarks | `python aml/scripts/benchmark_system.py`       |
 
 ---
 

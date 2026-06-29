@@ -9,13 +9,13 @@ from pathlib import Path
 
 import pytest
 
-# Add code to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+# Add the project root (parent of aml/) to the path so `aml.*` imports resolve
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from code.agents.narrative_agent import NarrativeAgent
-from code.agents.privacy_guard import PrivacyGuard
-from code.data.synthetic_generator import SyntheticTransactionGenerator
-from code.models.xgboost_classifier import XGBoostClassifier
+from aml.agents.narrative_agent import NarrativeAgent
+from aml.agents.privacy_guard import PrivacyGuard
+from aml.data.synthetic_generator import SyntheticTransactionGenerator
+from aml.models.xgboost_classifier import XGBoostClassifier
 
 
 @pytest.fixture

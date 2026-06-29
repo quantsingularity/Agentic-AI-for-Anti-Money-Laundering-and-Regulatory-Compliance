@@ -1,7 +1,8 @@
 import json
-from code.scripts import generate_figures as gf
 
 import pytest
+
+from aml.scripts import generate_figures as gf
 
 
 @pytest.fixture

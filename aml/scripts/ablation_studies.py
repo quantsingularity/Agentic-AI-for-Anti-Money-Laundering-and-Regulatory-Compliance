@@ -9,8 +9,9 @@ for quick checks.
 import argparse
 import json
 import logging
-from code.scripts.run_experiments import ExperimentRunner
 from pathlib import Path
+
+from aml.scripts.run_experiments import ExperimentRunner
 
 logger = logging.getLogger(__name__)
 

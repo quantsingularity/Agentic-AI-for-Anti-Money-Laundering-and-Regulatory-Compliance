@@ -24,10 +24,24 @@ from pathlib import Path
 from typing import Dict
 
 import matplotlib.pyplot as plt
-import seaborn as sns
 
-# Set style
-sns.set_style("whitegrid")
+# Seaborn is used only for cosmetic styling. Import it defensively so figure
+# generation is not blocked by a seaborn/matplotlib version mismatch (older
+# seaborn calls matplotlib.cm.register_cmap, which was removed in matplotlib
+# 3.9+). Fall back to an equivalent matplotlib grid style when unavailable.
+try:
+    import seaborn as sns
+
+    sns.set_style("whitegrid")
+except Exception:  # ImportError or AttributeError from version incompatibility
+    sns = None
+    for _style in ("seaborn-v0_8-whitegrid", "seaborn-whitegrid", "ggplot"):
+        if _style in plt.style.available:
+            plt.style.use(_style)
+            break
+    else:
+        plt.rcParams["axes.grid"] = True
+
 plt.rcParams["figure.dpi"] = 300
 plt.rcParams["savefig.dpi"] = 300
 plt.rcParams["font.size"] = 10
@@ -287,7 +301,21 @@ def generate_architecture_diagram(output_dir: Path):
         logger.info("Generated: %s.svg", output_path)
 
     except ImportError:
-        logger.warning("graphviz not installed, skipping architecture diagram")
+        logger.warning(
+            "graphviz Python package not installed; skipping architecture diagram"
+        )
+    except Exception as exc:
+        # The python-graphviz package is only a wrapper; rendering shells out to
+        # the Graphviz 'dot' binary. If that binary is missing or not executable
+        # it raises ExecutableNotFound / PermissionError / CalledProcessError.
+        # This diagram is optional and static, so skip it rather than failing the
+        # whole figure-generation step (the data figures are already produced).
+        logger.warning(
+            "Could not render the architecture diagram; the Graphviz 'dot' system "
+            "binary may be missing or not executable (%s). Skipping this figure. "
+            "Install Graphviz (e.g. `sudo apt-get install graphviz`) to enable it.",
+            exc,
+        )
 
 
 def generate_explainability_annotation(output_dir: Path):

@@ -1,0 +1,53 @@
+{
+  "total_transactions": 10000,
+  "fraud_rate": 0.023,
+  "fraud_count": 230,
+  "typology_distribution": {
+    "none": 9770,
+    "high_risk_geography": 41,
+    "rapid_movement": 38,
+    "trade_based": 36,
+    "sanctions_evasion": 34,
+    "shell_company": 33,
+    "structuring": 25,
+    "smurfing": 23
+  },
+  "amount_stats": {
+    "mean": 6647.058067883982,
+    "median": 686.2624600632964,
+    "std": 70586.45195365525,
+    "min": 2.1064765650524637,
+    "max": 1949192.9337607855
+  },
+  "country_distribution": {
+    "sender": {
+      "FR": 1449,
+      "JP": 1439,
+      "US": 1435,
+      "GB": 1425,
+      "DE": 1401,
+      "AU": 1385,
+      "CA": 1384,
+      "HK": 18,
+      "PA": 15,
+      "LU": 13
+    },
+    "receiver": {
+      "GB": 1487,
+      "AU": 1454,
+      "US": 1428,
+      "JP": 1395,
+      "FR": 1387,
+      "CA": 1384,
+      "DE": 1344,
+      "CN": 17,
+      "VE": 13,
+      "AF": 13
+    }
+  },
+  "time_range": {
+    "start": "2024-01-01T00:28:19",
+    "end": "2024-03-30T23:42:53",
+    "days": 89
+  }
+}

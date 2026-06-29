@@ -1,4 +1,4 @@
-from code.scripts import ablation_studies as ab
+from aml.scripts import ablation_studies as ab
 
 
 def test_ablation_runs(tmp_path):

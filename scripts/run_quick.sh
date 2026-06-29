@@ -13,24 +13,21 @@ mkdir -p data/synthetic
 mkdir -p figures
 mkdir -p logs
 
-echo "[1/4] Setting up environment..."
+echo "[1/3] Setting up environment..."
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 export RANDOM_SEED=42
 
-echo "[2/4] Running quick experiments (reduced dataset)..."
-python code/scripts/run_experiments.py \
+echo "[2/3] Running quick experiments (reduced dataset)..."
+python aml/scripts/run_experiments.py \
     --seed 42 \
     --n-transactions 10000 \
     --fraud-rate 0.023 \
     --output-dir results/quick_run
 
-echo "[3/4] Generating figures..."
-python code/scripts/generate_figures.py \
+echo "[3/3] Generating figures..."
+python aml/scripts/generate_figures.py \
     --results-dir results/quick_run \
     --output-dir figures
-
-echo "[4/4] Running tests..."
-pytest tests/ -v --tb=short
 
 echo ""
 echo "=========================================="

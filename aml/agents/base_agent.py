@@ -7,7 +7,7 @@ import json
 import time
 import uuid
 from abc import ABC, abstractmethod
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from loguru import logger
@@ -82,7 +82,7 @@ class BaseAgent(ABC):
                 "execution_id": execution_id,
                 "result": result,
                 "execution_time": execution_time,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "status": "success",
             }
 
@@ -103,7 +103,7 @@ class BaseAgent(ABC):
                 "error": str(e),
                 "error_type": type(e).__name__,
                 "execution_time": execution_time,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "status": "error",
             }
 
@@ -121,7 +121,7 @@ class BaseAgent(ABC):
             "agent_class": self.__class__.__name__,
             "execution_id": execution_id,
             "event_type": event_type,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "data": self._serialize_data(data),
         }
         self.audit_log.append(event)

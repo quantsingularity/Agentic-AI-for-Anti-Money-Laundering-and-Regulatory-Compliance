@@ -9,24 +9,25 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import json
-from code.adversarial.adversarial_tester import AdversarialTester
-from code.analysis.cost_benefit import CostBenefitAnalyzer
-from code.caching.redis_cache import RedisCache
-from code.dashboard.explainability_dashboard import ExplainabilityDashboard
-from code.data.synthetic_generator import SyntheticTransactionGenerator
-from code.monitoring.mlflow_monitor import (
+from datetime import datetime
+
+import numpy as np
+from loguru import logger
+
+from aml.adversarial.adversarial_tester import AdversarialTester
+from aml.analysis.cost_benefit import CostBenefitAnalyzer
+from aml.caching.redis_cache import RedisCache
+from aml.dashboard.explainability_dashboard import ExplainabilityDashboard
+from aml.data.synthetic_generator import SyntheticTransactionGenerator
+from aml.monitoring.mlflow_monitor import (
     DriftDetector,
     MLflowMonitor,
     PrometheusMetrics,
 )
 
 # Import enhanced components
-from code.streaming.kafka_consumer import TransactionStreamConsumer
-from code.validation.data_validator import DataValidator
-from datetime import datetime
-
-import numpy as np
-from loguru import logger
+from aml.streaming.kafka_consumer import TransactionStreamConsumer
+from aml.validation.data_validator import DataValidator
 
 
 class EnhancedAMLSystem:

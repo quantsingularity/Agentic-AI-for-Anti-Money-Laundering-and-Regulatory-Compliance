@@ -24,8 +24,8 @@ fastparquet==2023.7.0
 jsonlines==3.1.0
 
 # Visualization
-matplotlib==3.7.2
-seaborn==0.12.2
+matplotlib>=3.7.2
+seaborn>=0.12.2
 plotly==5.15.0
 graphviz==0.20.1
 

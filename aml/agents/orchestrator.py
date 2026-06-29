@@ -5,7 +5,7 @@ Coordinates all agents in the AML pipeline.
 
 import json
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
 from loguru import logger
@@ -69,7 +69,7 @@ class Orchestrator:
         results = {
             "workflow_id": workflow_id,
             "input_count": len(transactions),
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "sars_generated": [],
             "alerts": [],
             "errors": [],
@@ -225,7 +225,7 @@ class Orchestrator:
         sar = {
             "entity_id": entity_id,
             "workflow_id": workflow_id,
-            "generation_time": datetime.utcnow().isoformat(),
+            "generation_time": datetime.now(timezone.utc).isoformat(),
             "typology": typology,
             "risk_score": risk_score,
             "transaction_count": len(transactions),
@@ -264,7 +264,7 @@ class Orchestrator:
         self.execution_log.append(
             {
                 "agent": agent_name,
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "execution_time": result.get("execution_time", 0),
                 "status": result.get("status", "unknown"),
             }

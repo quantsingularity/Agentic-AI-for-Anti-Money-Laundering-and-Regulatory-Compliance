@@ -1,4 +1,4 @@
-from code.scripts.run_experiments import ExperimentRunner
+from aml.scripts.run_experiments import ExperimentRunner
 
 
 def test_run_full_pipeline_smoke(tmp_path):
