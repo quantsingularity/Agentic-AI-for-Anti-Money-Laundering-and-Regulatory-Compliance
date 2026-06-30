@@ -1,330 +1,320 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AML Investigator Dashboard</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
-          Cantarell, sans-serif;
-        background: #f5f7fa;
-        color: #2c3e50;
-      }
-
-      .header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 20px 40px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-      }
-
-      .header h1 {
-        font-size: 28px;
-        font-weight: 600;
-      }
-
-      .header p {
-        opacity: 0.9;
-        margin-top: 5px;
-      }
-
-      .container {
-        max-width: 1400px;
-        margin: 30px auto;
-        padding: 0 20px;
-      }
-
-      .sar-list {
-        background: white;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 30px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      }
-
-      .sar-item {
-        padding: 15px;
-        border-bottom: 1px solid #e1e8ed;
-        cursor: pointer;
-        transition: background 0.2s;
-      }
-
-      .sar-item:hover {
-        background: #f8f9fa;
-      }
-
-      .sar-item:last-child {
-        border-bottom: none;
-      }
-
-      .sar-id {
-        font-weight: 600;
-        color: #667eea;
-      }
-
-      .risk-badge {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 600;
-        margin-left: 10px;
-      }
-
-      .risk-high {
-        background: #fee;
-        color: #c00;
-      }
-
-      .risk-medium {
-        background: #ffeaa7;
-        color: #d63031;
-      }
-
-      .risk-low {
-        background: #e8f5e9;
-        color: #27ae60;
-      }
-
-      .sar-details {
-        display: none;
-        background: white;
-        border-radius: 8px;
-        padding: 30px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      }
-
-      .tab-nav {
-        display: flex;
-        border-bottom: 2px solid #e1e8ed;
-        margin-bottom: 20px;
-      }
-
-      .tab-btn {
-        padding: 12px 24px;
-        border: none;
-        background: none;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 600;
-        color: #7f8c8d;
-        transition: all 0.3s;
-      }
-
-      .tab-btn.active {
-        color: #667eea;
-        border-bottom: 3px solid #667eea;
-      }
-
-      .tab-content {
-        display: none;
-      }
-
-      .tab-content.active {
-        display: block;
-      }
-
-      .summary-box {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 20px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-      }
-
-      .key-factors {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 15px;
-        margin: 20px 0;
-      }
-
-      .factor-card {
-        background: #f8f9fa;
-        padding: 15px;
-        border-radius: 6px;
-        border-left: 4px solid #667eea;
-      }
-
-      .factor-card h4 {
-        margin-bottom: 8px;
-        color: #2c3e50;
-      }
-
-      .decision-path {
-        margin: 20px 0;
-      }
-
-      .path-step {
-        display: flex;
-        align-items: flex-start;
-        margin-bottom: 20px;
-        padding-left: 30px;
-        position: relative;
-      }
-
-      .path-step::before {
-        content: "";
-        position: absolute;
-        left: 10px;
-        top: 8px;
-        width: 12px;
-        height: 12px;
-        background: #667eea;
-        border-radius: 50%;
-      }
-
-      .path-step::after {
-        content: "";
-        position: absolute;
-        left: 15px;
-        top: 20px;
-        width: 2px;
-        height: calc(100% + 10px);
-        background: #e1e8ed;
-      }
-
-      .path-step:last-child::after {
-        display: none;
-      }
-
-      .action-buttons {
-        display: flex;
-        gap: 15px;
-        margin-top: 30px;
-      }
-
-      .btn {
-        padding: 12px 24px;
-        border: none;
-        border-radius: 6px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s;
-      }
-
-      .btn-approve {
-        background: #27ae60;
-        color: white;
-      }
-
-      .btn-approve:hover {
-        background: #229954;
-      }
-
-      .btn-reject {
-        background: #e74c3c;
-        color: white;
-      }
-
-      .btn-reject:hover {
-        background: #c0392b;
-      }
-
-      .btn-secondary {
-        background: #95a5a6;
-        color: white;
-      }
-
-      .plot-container {
-        margin: 20px 0;
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-      }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        .sar-list {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .sar-item {
+            padding: 15px;
+            border-bottom: 1px solid #e1e8ed;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .sar-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .sar-item:last-child {
+            border-bottom: none;
+        }
+        
+        .sar-id {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .risk-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .risk-high {
+            background: #fee;
+            color: #c00;
+        }
+        
+        .risk-medium {
+            background: #ffeaa7;
+            color: #d63031;
+        }
+        
+        .risk-low {
+            background: #e8f5e9;
+            color: #27ae60;
+        }
+        
+        .sar-details {
+            display: none;
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .tab-nav {
+            display: flex;
+            border-bottom: 2px solid #e1e8ed;
+            margin-bottom: 20px;
+        }
+        
+        .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: #7f8c8d;
+            transition: all 0.3s;
+        }
+        
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .summary-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .key-factors {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .factor-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .factor-card h4 {
+            margin-bottom: 8px;
+            color: #2c3e50;
+        }
+        
+        .decision-path {
+            margin: 20px 0;
+        }
+        
+        .path-step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding-left: 30px;
+            position: relative;
+        }
+        
+        .path-step::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 8px;
+            width: 12px;
+            height: 12px;
+            background: #667eea;
+            border-radius: 50%;
+        }
+        
+        .path-step::after {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 20px;
+            width: 2px;
+            height: calc(100% + 10px);
+            background: #e1e8ed;
+        }
+        
+        .path-step:last-child::after {
+            display: none;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-approve {
+            background: #27ae60;
+            color: white;
+        }
+        
+        .btn-approve:hover {
+            background: #229954;
+        }
+        
+        .btn-reject {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        .btn-reject:hover {
+            background: #c0392b;
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .plot-container {
+            margin: 20px 0;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
     </style>
-  </head>
-  <body>
+</head>
+<body>
     <div class="header">
-      <h1>🔍 AML Investigator Dashboard</h1>
-      <p>Suspicious Activity Report Analysis & Explainability</p>
+        <h1>🔍 AML Investigator Dashboard</h1>
+        <p>Suspicious Activity Report Analysis & Explainability</p>
     </div>
-
+    
     <div class="container">
-      <div class="sar-list" id="sarList">
-        <h2>Pending SARs</h2>
-        <div id="sarListItems"></div>
-      </div>
-
-      <div class="sar-details" id="sarDetails">
-        <h2>SAR Details</h2>
-
-        <div class="summary-box" id="summary"></div>
-
-        <div class="tab-nav">
-          <button class="tab-btn active" data-tab="overview">Overview</button>
-          <button class="tab-btn" data-tab="evidence">Evidence</button>
-          <button class="tab-btn" data-tab="analysis">Analysis</button>
-          <button class="tab-btn" data-tab="network">Network</button>
+        <div class="sar-list" id="sarList">
+            <h2>Pending SARs</h2>
+            <div id="sarListItems"></div>
         </div>
-
-        <div class="tab-content active" id="tab-overview">
-          <h3>Key Contributing Factors</h3>
-          <div class="key-factors" id="keyFactors"></div>
-
-          <h3>Decision Path</h3>
-          <div class="decision-path" id="decisionPath"></div>
+        
+        <div class="sar-details" id="sarDetails">
+            <h2>SAR Details</h2>
+            
+            <div class="summary-box" id="summary"></div>
+            
+            <div class="tab-nav">
+                <button class="tab-btn active" data-tab="overview">Overview</button>
+                <button class="tab-btn" data-tab="evidence">Evidence</button>
+                <button class="tab-btn" data-tab="analysis">Analysis</button>
+                <button class="tab-btn" data-tab="network">Network</button>
+            </div>
+            
+            <div class="tab-content active" id="tab-overview">
+                <h3>Key Contributing Factors</h3>
+                <div class="key-factors" id="keyFactors"></div>
+                
+                <h3>Decision Path</h3>
+                <div class="decision-path" id="decisionPath"></div>
+            </div>
+            
+            <div class="tab-content" id="tab-evidence">
+                <h3>Evidence Trail</h3>
+                <div id="evidenceTrail"></div>
+            </div>
+            
+            <div class="tab-content" id="tab-analysis">
+                <h3>Feature Importance</h3>
+                <div class="plot-container" id="featureImportancePlot"></div>
+                
+                <h3>Transaction Timeline</h3>
+                <div class="plot-container" id="timelinePlot"></div>
+            </div>
+            
+            <div class="tab-content" id="tab-network">
+                <h3>Entity Network Graph</h3>
+                <div class="plot-container" id="networkPlot"></div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-approve" onclick="approveSAR()">✓ Approve & File</button>
+                <button class="btn btn-reject" onclick="rejectSAR()">✗ Reject</button>
+                <button class="btn btn-secondary" onclick="closeSAR()">← Back to List</button>
+            </div>
         </div>
-
-        <div class="tab-content" id="tab-evidence">
-          <h3>Evidence Trail</h3>
-          <div id="evidenceTrail"></div>
-        </div>
-
-        <div class="tab-content" id="tab-analysis">
-          <h3>Feature Importance</h3>
-          <div class="plot-container" id="featureImportancePlot"></div>
-
-          <h3>Transaction Timeline</h3>
-          <div class="plot-container" id="timelinePlot"></div>
-        </div>
-
-        <div class="tab-content" id="tab-network">
-          <h3>Entity Network Graph</h3>
-          <div class="plot-container" id="networkPlot"></div>
-        </div>
-
-        <div class="action-buttons">
-          <button class="btn btn-approve" onclick="approveSAR()">
-            ✓ Approve & File
-          </button>
-          <button class="btn btn-reject" onclick="rejectSAR()">✗ Reject</button>
-          <button class="btn btn-secondary" onclick="closeSAR()">
-            ← Back to List
-          </button>
-        </div>
-      </div>
     </div>
-
+    
     <script>
-      let currentSARId = null;
-
-      // Load SAR list
-      function loadSARList() {
-        $.get("/api/sars", function (data) {
-          const listItems = $("#sarListItems");
-          listItems.empty();
-
-          data.sars.forEach((sar) => {
-            const riskClass =
-              sar.risk_score > 0.7
-                ? "risk-high"
-                : sar.risk_score > 0.4
-                  ? "risk-medium"
-                  : "risk-low";
-
-            const item = $(`
+        let currentSARId = null;
+        
+        // Load SAR list
+        function loadSARList() {
+            $.get('/api/sars', function(data) {
+                const listItems = $('#sarListItems');
+                listItems.empty();
+                
+                data.sars.forEach(sar => {
+                    const riskClass = sar.risk_score > 0.7 ? 'risk-high' : 
+                                     sar.risk_score > 0.4 ? 'risk-medium' : 'risk-low';
+                    
+                    const item = $(`
                         <div class="sar-item" onclick="loadSAR('${sar.sar_id}')">
                             <span class="sar-id">${sar.sar_id}</span>
                             <span class="risk-badge ${riskClass}">${(sar.risk_score * 100).toFixed(1)}%</span>
@@ -333,47 +323,47 @@
                             </div>
                         </div>
                     `);
-            listItems.append(item);
-          });
-        });
-      }
-
-      // Load SAR details
-      function loadSAR(sarId) {
-        currentSARId = sarId;
-
-        $.get(`/api/sar/${sarId}`, function (data) {
-          const sar = data.sar;
-          const explanation = data.explanation;
-
-          // Show details panel
-          $("#sarList").hide();
-          $("#sarDetails").show();
-
-          // Summary
-          $("#summary").html(`
+                    listItems.append(item);
+                });
+            });
+        }
+        
+        // Load SAR details
+        function loadSAR(sarId) {
+            currentSARId = sarId;
+            
+            $.get(`/api/sar/${sarId}`, function(data) {
+                const sar = data.sar;
+                const explanation = data.explanation;
+                
+                // Show details panel
+                $('#sarList').hide();
+                $('#sarDetails').show();
+                
+                // Summary
+                $('#summary').html(`
                     <h3>SAR ${sarId}</h3>
                     <p>${explanation.summary}</p>
                 `);
-
-          // Key factors
-          const factors = $("#keyFactors");
-          factors.empty();
-          explanation.key_factors.forEach((factor) => {
-            factors.append(`
+                
+                // Key factors
+                const factors = $('#keyFactors');
+                factors.empty();
+                explanation.key_factors.forEach(factor => {
+                    factors.append(`
                         <div class="factor-card">
                             <h4>${factor.name}</h4>
-                            <p>Importance: ${factor.importance ? (factor.importance * 100).toFixed(1) + "%" : factor.confidence}</p>
-                            <p style="font-size: 13px; color: #7f8c8d;">${factor.description || ""}</p>
+                            <p>Importance: ${factor.importance ? (factor.importance * 100).toFixed(1) + '%' : factor.confidence}</p>
+                            <p style="font-size: 13px; color: #7f8c8d;">${factor.description || ''}</p>
                         </div>
                     `);
-          });
-
-          // Decision path
-          const path = $("#decisionPath");
-          path.empty();
-          explanation.decision_path.forEach((step) => {
-            path.append(`
+                });
+                
+                // Decision path
+                const path = $('#decisionPath');
+                path.empty();
+                explanation.decision_path.forEach(step => {
+                    path.append(`
                         <div class="path-step">
                             <div>
                                 <strong>${step.step}</strong>: ${step.result}
@@ -381,110 +371,110 @@
                             </div>
                         </div>
                     `);
-          });
-
-          // Load visualizations
-          loadVisualizations(sarId);
-        });
-      }
-
-      function loadVisualizations(sarId) {
-        // Feature importance
-        $.get(`/api/sar/${sarId}/feature_importance`, function (data) {
-          if (data.plot) {
-            Plotly.newPlot("featureImportancePlot", JSON.parse(data.plot));
-          }
-        });
-
-        // Timeline
-        $.get(`/api/sar/${sarId}/timeline`, function (data) {
-          if (data.plot) {
-            Plotly.newPlot("timelinePlot", JSON.parse(data.plot));
-          }
-        });
-
-        // Network
-        $.get(`/api/sar/${sarId}/network`, function (data) {
-          if (data.plot) {
-            Plotly.newPlot("networkPlot", JSON.parse(data.plot));
-          }
-        });
-
-        // Evidence
-        $.get(`/api/sar/${sarId}/evidence`, function (data) {
-          const trail = $("#evidenceTrail");
-          trail.empty();
-
-          if (data.evidence.transactions.length > 0) {
-            trail.append("<h4>Transactions</h4>");
-            data.evidence.transactions.forEach((txn) => {
-              trail.append(`
+                });
+                
+                // Load visualizations
+                loadVisualizations(sarId);
+            });
+        }
+        
+        function loadVisualizations(sarId) {
+            // Feature importance
+            $.get(`/api/sar/${sarId}/feature_importance`, function(data) {
+                if (data.plot) {
+                    Plotly.newPlot('featureImportancePlot', JSON.parse(data.plot));
+                }
+            });
+            
+            // Timeline
+            $.get(`/api/sar/${sarId}/timeline`, function(data) {
+                if (data.plot) {
+                    Plotly.newPlot('timelinePlot', JSON.parse(data.plot));
+                }
+            });
+            
+            // Network
+            $.get(`/api/sar/${sarId}/network`, function(data) {
+                if (data.plot) {
+                    Plotly.newPlot('networkPlot', JSON.parse(data.plot));
+                }
+            });
+            
+            // Evidence
+            $.get(`/api/sar/${sarId}/evidence`, function(data) {
+                const trail = $('#evidenceTrail');
+                trail.empty();
+                
+                if (data.evidence.transactions.length > 0) {
+                    trail.append('<h4>Transactions</h4>');
+                    data.evidence.transactions.forEach(txn => {
+                        trail.append(`
                             <div class="factor-card" style="margin-bottom: 10px;">
                                 <strong>${txn.id}</strong>: $${txn.amount.toFixed(2)}<br>
                                 ${txn.sender} → ${txn.receiver}<br>
                                 <small>${new Date(txn.timestamp).toLocaleString()}</small>
                             </div>
                         `);
+                    });
+                }
             });
-          }
+        }
+        
+        function approveSAR() {
+            if (!currentSARId) return;
+            
+            const investigator = prompt('Enter your name:');
+            const notes = prompt('Approval notes:');
+            
+            $.ajax({
+                url: `/api/sar/${currentSARId}/approve`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({investigator, notes}),
+                success: function() {
+                    alert('SAR approved successfully!');
+                    closeSAR();
+                }
+            });
+        }
+        
+        function rejectSAR() {
+            if (!currentSARId) return;
+            
+            const investigator = prompt('Enter your name:');
+            const reason = prompt('Rejection reason:');
+            
+            $.ajax({
+                url: `/api/sar/${currentSARId}/reject`,
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({investigator, reason}),
+                success: function() {
+                    alert('SAR rejected.');
+                    closeSAR();
+                }
+            });
+        }
+        
+        function closeSAR() {
+            $('#sarDetails').hide();
+            $('#sarList').show();
+            loadSARList();
+        }
+        
+        // Tab switching
+        $('.tab-btn').click(function() {
+            $('.tab-btn').removeClass('active');
+            $(this).addClass('active');
+            
+            $('.tab-content').removeClass('active');
+            $('#tab-' + $(this).data('tab')).addClass('active');
         });
-      }
-
-      function approveSAR() {
-        if (!currentSARId) return;
-
-        const investigator = prompt("Enter your name:");
-        const notes = prompt("Approval notes:");
-
-        $.ajax({
-          url: `/api/sar/${currentSARId}/approve`,
-          method: "POST",
-          contentType: "application/json",
-          data: JSON.stringify({ investigator, notes }),
-          success: function () {
-            alert("SAR approved successfully!");
-            closeSAR();
-          },
+        
+        // Initialize
+        $(document).ready(function() {
+            loadSARList();
         });
-      }
-
-      function rejectSAR() {
-        if (!currentSARId) return;
-
-        const investigator = prompt("Enter your name:");
-        const reason = prompt("Rejection reason:");
-
-        $.ajax({
-          url: `/api/sar/${currentSARId}/reject`,
-          method: "POST",
-          contentType: "application/json",
-          data: JSON.stringify({ investigator, reason }),
-          success: function () {
-            alert("SAR rejected.");
-            closeSAR();
-          },
-        });
-      }
-
-      function closeSAR() {
-        $("#sarDetails").hide();
-        $("#sarList").show();
-        loadSARList();
-      }
-
-      // Tab switching
-      $(".tab-btn").click(function () {
-        $(".tab-btn").removeClass("active");
-        $(this).addClass("active");
-
-        $(".tab-content").removeClass("active");
-        $("#tab-" + $(this).data("tab")).addClass("active");
-      });
-
-      // Initialize
-      $(document).ready(function () {
-        loadSARList();
-      });
     </script>
-  </body>
+</body>
 </html>

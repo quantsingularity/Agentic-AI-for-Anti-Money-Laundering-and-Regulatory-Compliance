@@ -3,7 +3,7 @@
     "seed": 42,
     "n_transactions": 10000,
     "fraud_rate": 0.023,
-    "timestamp": "2026-06-29T12:13:06.305270+00:00"
+    "timestamp": "2026-06-30T03:48:38.148143+00:00"
   },
   "data_generation": {
     "n_transactions": 10000,
@@ -73,8 +73,8 @@
     "false_positive_rate": 0.00829588662288282,
     "false_negative_rate": 0.514018691588785,
     "pr_auc": 0.5244803879439809,
-    "sar_generation_time_mean": 3.560906962344521e-5,
-    "sar_generation_time_std": 3.1503122981462104e-5,
+    "sar_generation_time_mean": 3.538633647717928e-05,
+    "sar_generation_time_std": 1.9992071586924334e-05,
     "sars_generated": 76,
     "judge_dismissals": 0,
     "judge_escalations": 53
@@ -105,8 +105,8 @@
       "false_positive_rate": 0.0,
       "false_negative_rate": 0.7850467289719626,
       "pr_auc": 0.5244803879439809,
-      "sar_generation_time_mean": 4.900020101796026e-5,
-      "sar_generation_time_std": 1.8590517527676434e-5,
+      "sar_generation_time_mean": 5.087645157523777e-05,
+      "sar_generation_time_std": 1.198352862109557e-05,
       "sars_generated": 23,
       "judge_dismissals": 0,
       "judge_escalations": 0
@@ -130,7 +130,7 @@
     "agentic_f1": 0.5683060109289617,
     "f1_improvement": 0.1453669428286033,
     "fpr_reduction": 0.03076391289319046,
-    "mean_sar_generation_time": 3.560906962344521e-5,
+    "mean_sar_generation_time": 3.538633647717928e-05,
     "key_findings": [
       "Agentic system achieves 0.568 F1 score",
       "34.4% improvement over best baseline rule_based (0.423)",
@@ -138,5 +138,5 @@
       "Mean SAR generation time: 0.00s"
     ]
   },
-  "total_execution_time": 1.6506965160369873
+  "total_execution_time": 9.891401529312134
 }
