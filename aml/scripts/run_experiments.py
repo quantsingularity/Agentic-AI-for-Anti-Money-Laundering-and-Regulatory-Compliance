@@ -3,6 +3,77 @@ Main Experiment Runner
 Executes complete experimental suite and generates deterministic results.
 """
 
+import logging as _lg
+
+# --- keep run output readable: suppress benign third-party noise (auto-added) ---
+import os as _os
+import warnings as _w
+
+_os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
+_os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+_os.environ.setdefault("GRPC_VERBOSITY", "ERROR")
+for _m in (
+    r".*does not have valid feature names.*",
+    r".*tight_layout.*",
+    r".*Gym has been unmaintained.*",
+    r".*not wrapped with a ``Monitor``.*",
+):
+    _w.filterwarnings("ignore", message=_m)
+_w.filterwarnings("ignore", category=DeprecationWarning)
+_w.filterwarnings("ignore", category=FutureWarning)
+try:
+    from sklearn.exceptions import ConvergenceWarning as _CW
+
+    _w.filterwarnings("ignore", category=_CW)
+except Exception:
+    pass
+for _n in (
+    "matplotlib",
+    "PIL",
+    "urllib3",
+    "yfinance",
+    "tensorflow",
+    "absl",
+    "gym",
+    "gymnasium",
+    "shap",
+    "numba",
+    "h5py",
+):
+    _lg.getLogger(_n).setLevel(_lg.ERROR)
+
+
+def _silence_tqdm():
+    try:
+        import tqdm.std as _tstd
+
+        _orig = _tstd.tqdm.__init__
+
+        def _init(self, *a, **k):
+            k["disable"] = True
+            _orig(self, *a, **k)
+
+        _tstd.tqdm.__init__ = _init
+        try:
+            from tqdm import auto as _ta
+
+            if _ta.tqdm is not _tstd.tqdm:
+                _o2 = _ta.tqdm.__init__
+
+                def _init2(self, *a, **k):
+                    k["disable"] = True
+                    _o2(self, *a, **k)
+
+                _ta.tqdm.__init__ = _init2
+        except Exception:
+            pass
+    except Exception:
+        pass
+
+
+_silence_tqdm()
+# --- end output cleanup ---
+
 import json
 import sys
 import time
@@ -501,16 +572,36 @@ def main():
         n_transactions=args.n_transactions, fraud_rate=args.fraud_rate
     )
 
-    print("\n" + "=" * 60)
-    print("SUMMARY")
-    print("=" * 60)
-    for key, value in results["summary"].items():
-        if key != "key_findings":
-            print(f"{key}: {value}")
-    print("\nKey Findings:")
-    for finding in results["summary"]["key_findings"]:
-        print(f"  • {finding}")
-    print("=" * 60)
+    W = 60
+    s = results["summary"]
+    _fmt = {
+        "best_baseline": ("Best baseline", lambda v: str(v)),
+        "best_baseline_f1": ("Best baseline F1", lambda v: f"{v:.3f}"),
+        "agentic_f1": ("Agentic system F1", lambda v: f"{v:.3f}"),
+        "f1_improvement": ("F1 improvement", lambda v: f"+{v:.3f}"),
+        "fpr_reduction": ("False-positive drop", lambda v: f"{v:.3f}"),
+        "mean_sar_generation_time": (
+            "Mean SAR gen time",
+            lambda v: f"{v * 1000:.2f} ms",
+        ),
+    }
+    print("\n" + "=" * W)
+    print("AML SYSTEM - RESULTS SUMMARY".center(W))
+    print("=" * W)
+    for key, value in s.items():
+        if key == "key_findings":
+            continue
+        label, func = _fmt.get(key, (key, lambda v: str(v)))
+        try:
+            shown = func(value)
+        except Exception:
+            shown = str(value)
+        dots = max(2, 30 - len(label))
+        print(f"  {label} {'.' * dots} {shown}")
+    print("\nKey findings")
+    for finding in s.get("key_findings", []):
+        print(f"  - {finding}")
+    print("=" * W)
 
 
 if __name__ == "__main__":

@@ -107,6 +107,12 @@ pip install -r requirements.txt
 
 ---
 
+<!-- output-note -->
+
+### Output
+
+Console output stays readable: benign third-party warnings and library progress bars are suppressed, so only meaningful log lines remain. Each run finishes with a clean, aligned summary block reporting the key detection and compliance metrics for the run.
+
 ## Performance
 
 | Metric                  | Baseline    | Enhanced      | Change      |
